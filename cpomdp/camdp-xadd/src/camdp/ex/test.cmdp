@@ -1,0 +1,30 @@
+cvariables (ts)
+min-values (-500000)
+max-values (500000)
+bvariables ()
+ivariables()
+avariables(a)
+
+action move (-1000000<=a<=1000000)
+
+ts' ([ts+a])
+
+reward ([ts>235]
+				([-1101.8])	
+				([ts>200]
+           					([-810])
+							([ts>150]
+								([99.9])
+								([200])
+								)
+      				)
+			)
+      						
+      				
+      					
+      						
+      
+endaction
+discount 1.000000
+iterations 8
+

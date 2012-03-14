@@ -1,0 +1,3 @@
+Iteration #1, 4453712:16252928 bytes, 0 ms
+Value function size @ end of iteration 1: 5 nodes = 3 cases in 1012750 ms
+Iteration #2, 5802440:16252928 bytes, 0 ms
