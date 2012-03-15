@@ -101,7 +101,7 @@ public class CPOMDP {
 		parser.buildPOMDP(input);
 		_context._hmMaxVal = parser._maxCVal;
 		_context._hmMinVal = parser._minCVal;
-		//_context._alBooleanVars = parser.getBVars();
+		_context._hsBooleanVars = parser.getBVars();
 
 		_alConstraints = parser.getConstraints();
 		_nMaxIter = parser.getIterations();
@@ -196,7 +196,7 @@ public class CPOMDP {
 				int regr = _gammaHelper.computeGamma(me.getValue(),_previousgammaSet_h);
 				//the result is Gamma^h_a, add this to the current set of Gamma^h_a
 				regr = _context.reduceLinearize(regr);
-				//regr = _context.reduceLP(regr);
+				regr = _context.reduceLP(regr,_alContAllVars);
 				
 				_currentgammaSet_h.put(counter, regr);
 				
@@ -300,7 +300,7 @@ public class CPOMDP {
 		sb.append("CVars:       " +	_alContAllVars + " = " + _hsContSVars + " + " + _hsContOVars + "\n");
 		sb.append("Min-values:  " + _context._hmMinVal + "\n");
 		sb.append("Max-values:  " + _context._hmMaxVal + "\n");
-		//sb.append("BVars:       " + _context._alBooleanVars + "/" + _hsBoolSVars + "\n");
+		sb.append("BVars:       " + _context._hsBooleanVars + "/" + _hsBoolSVars + "\n");
 		sb.append("BOVars:       " + _hsBoolOVars + "\n");
 		sb.append("OVars:       " + _hsContOVars + "\n");
 		sb.append("Order:       " + _context._alOrder + "\n");
