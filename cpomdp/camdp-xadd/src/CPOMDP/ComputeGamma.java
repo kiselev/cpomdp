@@ -1,14 +1,22 @@
 package CPOMDP;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
 import util.IntTriple;
 import xadd.XADD;
+import xadd.XADD.ArithExpr;
 import xadd.XADD.BoolDec;
 import xadd.XADD.DeltaFunctionSubstitution;
+import xadd.XADD.DoubleExpr;
+import xadd.XADD.OperExpr;
+import xadd.XADD.VarExpr;
+import xadd.XADD.XADDINode;
 import xadd.XADD.XADDNode;
+import xadd.XADD.XADDTNode;
 
 public class ComputeGamma {
 
@@ -23,6 +31,8 @@ public class ComputeGamma {
 	}
 	public int computeGamma(COAction a, HashMap<Integer, Integer> _previousgammaSet_h) {
 
+		//first generate relevant observation partitions
+		generateRelObs(a,_previousgammaSet_h);
 		// for each of the alpha-vectors in the previous gammaset
 		int crossSum = _context.getTermNode(XADD.ZERO);
 		for (Map.Entry<Integer,Integer> j : _previousgammaSet_h.entrySet())
@@ -65,7 +75,7 @@ public class ComputeGamma {
 				
 				// Cache result
 				_pomdp._logStream.println("-->: " + _context.getString(q));
-				//_pomdp._hmContRegrCache.put(new IntTriple(_contRegrKey), q);
+				_pomdp._hmContRegrCache.put(new IntTriple(_contRegrKey), q);
 			}
 			
 			// Regress boolean variables second
@@ -90,7 +100,7 @@ public class ComputeGamma {
 			}
 			
 			//finished regress, for each G_{a,j}^h add to the cross-sum result
-			crossSum = _context.apply(crossSum,q, _context.SUM);
+			crossSum = _context.apply(crossSum, q, _context.SUM);
 			
 		}
 		crossSum = _context.apply(a._reward,  
@@ -101,12 +111,107 @@ public class ComputeGamma {
 		for (Integer constraint : _pomdp._alConstraints)
 			crossSum = _context.apply(crossSum, constraint, XADD.PROD);
 		if (_pomdp._alConstraints.size() > 0)
-			//crossSum = _context.reduceLP(crossSum);
+			crossSum = _context.reduceLP(crossSum,_pomdp._alContAllVars);
 		
 		// Optional Display
 		_pomdp._logStream.println("- Q^" + _pomdp._nCurIter + "(" + a._sName + ", " + " )\n" + _context.getString(crossSum));
 		
 		return crossSum;
 	}
+	
+	private void generateRelObs(COAction a, HashMap<Integer, Integer> _previousgammaSet_h) 
+	{
+
+		HashMap<String,ArithExpr> obs_subs = new HashMap<String,ArithExpr>();
+		for (int i=0;i<a._contObs.size();i++)
+		{
+			//first find the obs_subs that are to be substituted in each alpha-vector. 
+			//Note that this operation is only for no noise or binary noise
+			ArithExpr obs_var = ArithExpr.parse(a._contObs.get(i));
+			for (int bo=0;bo<a._boolObs.size();bo++)
+			{
+				XADDNode obsnode = _context.getNode(a._hmObs2DD.get(a._contObs.get(i)));
+				//either a TNode which means no noise, or INODE where there is noise
+				if (obsnode instanceof XADDTNode)
+				{
+					obs_var = getVarCoeff(obs_var,((XADDTNode) obsnode)._expr);
+					obs_subs.put(a._contState.get(i), obs_var);
+				}
+				else if (obsnode instanceof XADDINode)
+				{
+					XADDTNode high = (XADDTNode) _context.getNode(((XADDINode) obsnode)._high);
+					obs_var = getVarCoeff(obs_var,high._expr);
+					obs_var.makeCanonical();
+					obs_subs.put(a._contState.get(i)+"h", obs_var);
+					obs_var = null;
+					obs_var = ArithExpr.parse(a._contObs.get(i));
+					XADDTNode low = (XADDTNode) _context.getNode(((XADDINode) obsnode)._low);
+					obs_var = getVarCoeff(obs_var,low._expr);
+					obs_var.makeCanonical();
+					obs_subs.put(a._contState.get(i)+"l", obs_var);
+				}
+			}
+		}
+		for (Map.Entry<Integer,Integer> j : _previousgammaSet_h.entrySet())
+		{
+			//find observation  partitions of all the vectors, avoid overlapping
+			//keep a hashmap for probability, and hashmap of (state partition it came from and the obs partition )
+			XADDNode n = _context.getNode(j.getValue());
+			
+
+
+		}
+	}
+				
+
+	//returns the state dependent formula instead of the observation-dependant formula from the obs model. 
+	// work for sums of products 
+	private ArithExpr getVarCoeff(ArithExpr obs_var, ArithExpr _expr) 
+	{
+
+		//if high._expr is doubleExpr or VarExpr no extra operation is required
+		if (_expr instanceof OperExpr	&& ((OperExpr) _expr)._type == _context.SUM) 
+		{
+			for (ArithExpr e : ((OperExpr) _expr)._terms) 
+			{
+				if (e instanceof DoubleExpr) 
+				{
+					obs_var = ArithExpr.op(obs_var, e, _context.MINUS);
+				}
+				else if (e instanceof OperExpr) 
+				{
+					if (e instanceof OperExpr && ((OperExpr) e)._type == _context.PROD)
+					{
+						for (ArithExpr e1 : ((OperExpr) e)._terms) 
+						{
+							if (e instanceof DoubleExpr) 
+							{
+								double d = 1/((DoubleExpr) e)._dConstVal ;
+								obs_var = ArithExpr.op(obs_var, d, _context.PROD);
+							}
+						}
+					}
+				} 
+				else if (e instanceof VarExpr)
+				{
+					//no new operation is required here
+				}
+			}
+		}
+		else if (_expr instanceof OperExpr	&& ((OperExpr) _expr)._type == _context.PROD) 
+		{
+			for (ArithExpr e : ((OperExpr) _expr)._terms) 
+			{
+				if (e instanceof DoubleExpr) 
+				{
+					double d = 1/((DoubleExpr) e)._dConstVal ;
+					obs_var = ArithExpr.op(obs_var, d, _context.PROD);
+				}
+			}	
+		}
+		return obs_var;
+	}
+
+
 
 }
