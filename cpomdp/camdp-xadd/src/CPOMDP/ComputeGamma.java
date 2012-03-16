@@ -6,12 +6,16 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import org.omg.stub.java.rmi._Remote_Stub;
+
 import util.IntTriple;
 import xadd.XADD;
 import xadd.XADD.ArithExpr;
 import xadd.XADD.BoolDec;
+import xadd.XADD.Decision;
 import xadd.XADD.DeltaFunctionSubstitution;
 import xadd.XADD.DoubleExpr;
+import xadd.XADD.ExprDec;
 import xadd.XADD.OperExpr;
 import xadd.XADD.VarExpr;
 import xadd.XADD.XADDINode;
@@ -23,7 +27,7 @@ public class ComputeGamma {
 	XADD _context = null;
 	CPOMDP _pomdp = null;
 	private IntTriple _contRegrKey = new IntTriple(-1,-1,-1);
-
+	HashMap<Integer,PartitionObsState> _obspartitionset= new HashMap<Integer,PartitionObsState>();
 	public ComputeGamma(XADD xadd,CPOMDP pomdp)
 	{
 		_context = xadd;
@@ -121,8 +125,9 @@ public class ComputeGamma {
 	
 	private void generateRelObs(COAction a, HashMap<Integer, Integer> _previousgammaSet_h) 
 	{
-
-		HashMap<String,ArithExpr> obs_subs = new HashMap<String,ArithExpr>();
+		//first find the set of observation substitutes for state variables 
+		HashMap<String,ArithExpr> obs_subs = null;
+		boolean low = true;
 		for (int i=0;i<a._contObs.size();i++)
 		{
 			//first find the obs_subs that are to be substituted in each alpha-vector. 
@@ -134,36 +139,135 @@ public class ComputeGamma {
 				//either a TNode which means no noise, or INODE where there is noise
 				if (obsnode instanceof XADDTNode)
 				{
+					obs_subs = new HashMap<String,ArithExpr>();
 					obs_var = getVarCoeff(obs_var,((XADDTNode) obsnode)._expr);
 					obs_subs.put(a._contState.get(i), obs_var);
 				}
 				else if (obsnode instanceof XADDINode)
 				{
+					obs_subs = new HashMap<String,ArithExpr>();
 					XADDTNode high = (XADDTNode) _context.getNode(((XADDINode) obsnode)._high);
 					obs_var = getVarCoeff(obs_var,high._expr);
 					obs_var.makeCanonical();
-					obs_subs.put(a._contState.get(i)+"h", obs_var);
-					obs_var = null;
-					obs_var = ArithExpr.parse(a._contObs.get(i));
-					XADDTNode low = (XADDTNode) _context.getNode(((XADDINode) obsnode)._low);
-					obs_var = getVarCoeff(obs_var,low._expr);
-					obs_var.makeCanonical();
-					obs_subs.put(a._contState.get(i)+"l", obs_var);
+					obs_subs.put(a._contState.get(i), obs_var);
+					
+					low = false;
 				}
 			}
 		}
+		substituteVar(a,_previousgammaSet_h, obs_subs,1);
+		if (low ==false)
+		{
+			for (int i=0;i<a._contObs.size();i++)
+			{
+				//first find the obs_subs that are to be substituted in each alpha-vector. 
+				//Note that this operation is only for no noise or binary noise
+				ArithExpr obs_var = ArithExpr.parse(a._contObs.get(i));
+				for (int bo=0;bo<a._boolObs.size();bo++)
+				{
+					XADDNode obsnode = _context.getNode(a._hmObs2DD.get(a._contObs.get(i)));
+					obs_subs = new HashMap<String,ArithExpr>();
+					obs_var = null;
+					obs_var = ArithExpr.parse(a._contObs.get(i));
+					XADDTNode low1 = (XADDTNode) _context.getNode(((XADDINode) obsnode)._low);
+					obs_var = getVarCoeff(obs_var,low1._expr);
+					obs_var.makeCanonical();
+					obs_subs.put(a._contState.get(i), obs_var);
+				}
+			}
+			substituteVar(a,_previousgammaSet_h, obs_subs,0);
+		}
+	}
+	public void substituteVar(COAction a, HashMap<Integer, Integer> _previousgammaSet_h, HashMap<String,ArithExpr> obs_subs,int branch)
+	{
+		//find observation  partitions of all the vectors, avoid overlapping
 		for (Map.Entry<Integer,Integer> j : _previousgammaSet_h.entrySet())
 		{
-			//find observation  partitions of all the vectors, avoid overlapping
 			//keep a hashmap for probability, and hashmap of (state partition it came from and the obs partition )
+			int subst_obs = _context.substitute(j.getValue(), obs_subs);
 			XADDNode n = _context.getNode(j.getValue());
-			
-
-
+			XADDNode o = _context.getNode(subst_obs);
+			if (n instanceof XADDTNode)
+			{//there is no phi in a Tnode, don't add to observation partitions
+			}
+			while (n instanceof XADDINode)
+			{
+				int sp = ((XADDINode)n)._var;
+				int op = ((XADDINode)o)._var;
+				Decision d =  _context._alOrder.get(sp);
+				Decision od=  _context._alOrder.get(op);
+				double low1=0,high1=0;
+				if (d instanceof ExprDec)
+				{
+					ExprDec e = (ExprDec) d;
+					ExprDec oe = (ExprDec) od;
+					PartitionObsState obsS;
+					for (int bo=0;bo<a._boolObs.size();bo++)
+					{
+						String b = a._boolObs.get(bo)+"'";
+						XADDINode booleanNode = (XADDINode) _context.getNode(a._hmVar2DD.get(_context.getBoolVarIndex(b)));
+						XADDTNode low = (XADDTNode) _context.getNode(booleanNode._low);
+						XADDTNode high = (XADDTNode) _context.getNode(booleanNode._high);
+						 if (low._expr instanceof DoubleExpr)
+							 low1 = ((DoubleExpr)low._expr)._dConstVal;
+						 if (high._expr instanceof DoubleExpr)
+							 high1 = ((DoubleExpr)high._expr)._dConstVal;
+					}	
+					if (branch ==0) 
+					{
+						//low branch, low probability, assume one noise model for every action (for all state-observations)
+						if (overlapObservation(oe)!=-1)
+						{
+							obsS = _obspartitionset.get(overlapObservation(oe));
+							StateObsVector so = new StateObsVector(e._expr, oe._expr,low1);
+							obsS.setnewPartition(so);
+						}
+						else //no overlap, add new partition
+						{
+							StateObsVector so = new StateObsVector(e._expr, oe._expr,low1);
+							obsS = new PartitionObsState();
+							obsS.setnewPartition(so);
+							
+						}
+						_obspartitionset.put(_obspartitionset.size(), obsS);
+					}
+					else if (branch ==1) 
+					{
+						//low branch, low probability, assume one noise model for every action (for all state-observations)
+						if (overlapObservation(oe)!=-1)
+						{
+							obsS = _obspartitionset.get(overlapObservation(oe));
+							StateObsVector so = new StateObsVector(e._expr, oe._expr,high1);
+							obsS.setnewPartition(so);
+						}
+						else //no overlap, add new partition
+						{
+							StateObsVector so = new StateObsVector(e._expr, oe._expr,high1);
+							obsS = new PartitionObsState();
+							obsS.setnewPartition(so);
+						}
+						_obspartitionset.put(_obspartitionset.size(), obsS);
+					}
+				}
+			}
 		}
+		
 	}
 				
 
+	private int overlapObservation(ExprDec oe) {
+		//compare all observation partitions < or > and if overlaps, return the number of that partitionset
+		for (int i=0;i<_obspartitionset.size();i++)
+		{
+			PartitionObsState pos = _obspartitionset.get(i);
+			for (int j=0;j<pos.sizePartitionObsState();j++)
+			{
+				StateObsVector sov = pos.get_relObsProb(j);
+				sov.obs.
+			}
+		}
+		return -1;
+	}
 	//returns the state dependent formula instead of the observation-dependant formula from the obs model. 
 	// work for sums of products 
 	private ArithExpr getVarCoeff(ArithExpr obs_var, ArithExpr _expr) 
