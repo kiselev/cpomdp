@@ -14,6 +14,11 @@ public class IntTriple {
 		_i2 = i2;
 		_i3 = i3;
 	}
+	public IntTriple(IntTriple src) {
+		_i1 = src._i1;
+		_i2 = src._i2;
+		_i3 = src._i3;
+	}
 	public int hashCode() {
 		return (_i1) + (_i2 << 10) - (_i3 << 20)
 		   + (_i3 >>> 20) - (_i2 >>> 10);
