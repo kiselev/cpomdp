@@ -12,6 +12,7 @@ import util.IntTriple;
 import xadd.XADD;
 import xadd.XADD.ArithExpr;
 import xadd.XADD.BoolDec;
+import xadd.XADD.CompExpr;
 import xadd.XADD.Decision;
 import xadd.XADD.DeltaFunctionSubstitution;
 import xadd.XADD.DoubleExpr;
@@ -41,15 +42,12 @@ public class ComputeGamma {
 		int crossSum = _context.getTermNode(XADD.ZERO);
 		for (Map.Entry<Integer,Integer> j : _previousgammaSet_h.entrySet())
 		{
-			XADDNode n = _context.getNode(j.getValue());
-			
-			//first progress through the observations
-			
+			XADDNode n = _context.getNode(j.getValue());			
 			
 			HashSet<String> state_vars_in_vfun  = n.collectVars();
 			_pomdp._logStream.println("** Regressing " + a._sName + "\n- State vars in vfun: " + state_vars_in_vfun);
 			
-			// prime the result
+			// prime
 			int q = _context.substitute(j.getValue(), _pomdp._hmPrimeSubs); 
 			_pomdp._logStream.println("- Primed value function:\n" + _context.getString(q));
 			
@@ -181,16 +179,16 @@ public class ComputeGamma {
 	public void substituteVar(COAction a, HashMap<Integer, Integer> _previousgammaSet_h, HashMap<String,ArithExpr> obs_subs,int branch)
 	{
 		//find observation  partitions of all the vectors, avoid overlapping
-		for (Map.Entry<Integer,Integer> j : _previousgammaSet_h.entrySet())
+		for (int j=0;j<_previousgammaSet_h.size();j++)
 		{
 			//keep a hashmap for probability, and hashmap of (state partition it came from and the obs partition )
-			int subst_obs = _context.substitute(j.getValue(), obs_subs);
-			XADDNode n = _context.getNode(j.getValue());
+			int subst_obs = _context.substitute(_previousgammaSet_h.get(j), obs_subs);
+			XADDNode n = _context.getNode(_previousgammaSet_h.get(j));
 			XADDNode o = _context.getNode(subst_obs);
 			if (n instanceof XADDTNode)
 			{//there is no phi in a Tnode, don't add to observation partitions
 			}
-			while (n instanceof XADDINode)
+			if (n instanceof XADDINode)
 			{
 				int sp = ((XADDINode)n)._var;
 				int op = ((XADDINode)o)._var;
@@ -201,53 +199,63 @@ public class ComputeGamma {
 				{
 					ExprDec e = (ExprDec) d;
 					ExprDec oe = (ExprDec) od;
+					oe = (ExprDec) oe.makeCanonical();
 					PartitionObsState obsS;
 					for (int bo=0;bo<a._boolObs.size();bo++)
 					{
 						String b = a._boolObs.get(bo)+"'";
-						XADDINode booleanNode = (XADDINode) _context.getNode(a._hmVar2DD.get(_context.getBoolVarIndex(b)));
+						XADDINode booleanNode = (XADDINode) _context.getNode(a._hmVar2DD.get(b));
 						XADDTNode low = (XADDTNode) _context.getNode(booleanNode._low);
 						XADDTNode high = (XADDTNode) _context.getNode(booleanNode._high);
 						 if (low._expr instanceof DoubleExpr)
 							 low1 = ((DoubleExpr)low._expr)._dConstVal;
 						 if (high._expr instanceof DoubleExpr)
 							 high1 = ((DoubleExpr)high._expr)._dConstVal;
-					}	
-					if (branch ==0) 
-					{
-						//low branch, low probability, assume one noise model for every action (for all state-observations)
-						if (overlapObservation(oe)!=-1)
+						//low branch, low probability, 
+						 //assume one noise model for every action (for all state-observations)
+						 //low branch uses the negation of the actual expression
+						 int sign = oe._expr._type;
+						 CompExpr negoeC = new CompExpr(oe._expr._type, oe._expr._lhs, oe._expr._rhs);
+						 
+						 if ( sign == _context.LT_EQ || sign == _context.LT) 
+							 negoeC._type = _context.GT_EQ;
+						 else if ( sign == _context.GT_EQ || sign == _context.GT) 
+							 negoeC._type = _context.LT_EQ;
+						int oo = overlapObservation(negoeC);
+						if (oo != -1)
 						{
-							obsS = _obspartitionset.get(overlapObservation(oe));
-							StateObsVector so = new StateObsVector(e._expr, oe._expr,low1);
+							obsS = _obspartitionset.get(oo);
+							StateObsVector so = new StateObsVector(e._expr, negoeC,low1);
 							obsS.setnewPartition(so);
+							_obspartitionset.put(oo, obsS);
+
 						}
 						else //no overlap, add new partition
 						{
-							StateObsVector so = new StateObsVector(e._expr, oe._expr,low1);
+							StateObsVector so = new StateObsVector(e._expr, negoeC,low1);
 							obsS = new PartitionObsState();
 							obsS.setnewPartition(so);
-							
+							_obspartitionset.put(_obspartitionset.size(), obsS);	
 						}
-						_obspartitionset.put(_obspartitionset.size(), obsS);
-					}
-					else if (branch ==1) 
-					{
-						//low branch, low probability, assume one noise model for every action (for all state-observations)
-						if (overlapObservation(oe)!=-1)
+						//high branch, low probability, assume one noise model for every action (for all state-observations)
+						oo = overlapObservation(oe._expr);
+						if (oo!=-1)
 						{
-							obsS = _obspartitionset.get(overlapObservation(oe));
+							obsS = _obspartitionset.get(oo);
 							StateObsVector so = new StateObsVector(e._expr, oe._expr,high1);
 							obsS.setnewPartition(so);
+							_obspartitionset.put(oo, obsS);
 						}
 						else //no overlap, add new partition
 						{
 							StateObsVector so = new StateObsVector(e._expr, oe._expr,high1);
 							obsS = new PartitionObsState();
 							obsS.setnewPartition(so);
+							_obspartitionset.put(_obspartitionset.size(), obsS);
 						}
-						_obspartitionset.put(_obspartitionset.size(), obsS);
+						
 					}
+				
 				}
 			}
 		}
@@ -255,7 +263,7 @@ public class ComputeGamma {
 	}
 				
 
-	private int overlapObservation(ExprDec oe) {
+	private int overlapObservation(CompExpr oe) {
 		//compare all observation partitions < or > and if overlaps, return the number of that partitionset
 		for (int i=0;i<_obspartitionset.size();i++)
 		{
@@ -263,7 +271,96 @@ public class ComputeGamma {
 			for (int j=0;j<pos.sizePartitionObsState();j++)
 			{
 				StateObsVector sov = pos.get_relObsProb(j);
-				sov.obs.
+				//TODO: assume only one obs variable
+				//compare sov.obs with oe, if equal or different types of overlapping
+				//both are canonical so only need to consider the double expr on the left hand side
+				if (sov.obs._type == oe._type)
+				{
+					//only overlap if the double constant is equal
+					if ((sov.obs._lhs instanceof OperExpr)&&(oe._lhs instanceof OperExpr))
+					{
+						for (ArithExpr e1 : ((OperExpr) sov.obs._lhs)._terms) 
+							if (e1 instanceof DoubleExpr) 
+								for (ArithExpr e2 : ((OperExpr) oe._lhs)._terms) 
+								{
+									if (e2 instanceof DoubleExpr) 
+									{
+										if (((DoubleExpr) e1)._dConstVal == ((DoubleExpr) e2)._dConstVal)
+											return j;
+									}
+								}
+							
+						
+					}
+				}
+				else 
+				{
+					//overlap if 1: <= and 2:>= and 1's constant > 2's constant (note they are negative numbers)
+					//or if 1: >= and 2:<= and 1's constant is smaller than 2's constant ( for negative numbers it is opposite) 
+					if ((sov.obs._lhs instanceof OperExpr)&&(oe._lhs instanceof OperExpr))
+					{
+						if (sov.obs._type == _context.LT_EQ || sov.obs._type == _context.LT)
+						{
+							for (ArithExpr e1 : ((OperExpr) oe._lhs)._terms) 
+								if (e1 instanceof DoubleExpr) 
+									for (ArithExpr e2 : ((OperExpr) sov.obs._lhs)._terms) 
+									{
+										if (e2 instanceof DoubleExpr) 
+										{
+											//consider positive and negative numbers here
+											if ((((DoubleExpr) e1)._dConstVal>=0) && (((DoubleExpr) e2)._dConstVal>=0))
+												{
+												if (((DoubleExpr) e1)._dConstVal<((DoubleExpr) e2)._dConstVal)
+													return j;
+												}
+											else if ((((DoubleExpr) e1)._dConstVal<=0) && (((DoubleExpr) e2)._dConstVal<=0))
+											{
+												if (((DoubleExpr) e1)._dConstVal>((DoubleExpr) e2)._dConstVal)
+													return j;
+											}
+											else if ((((DoubleExpr) e1)._dConstVal<=0) && (((DoubleExpr) e2)._dConstVal>=0))
+											{
+													return j;
+											}
+											//no forth comparison
+											
+										}
+									}
+								
+						}
+						else if (sov.obs._type == _context.GT_EQ || sov.obs._type == _context.GT)
+						{
+							for (ArithExpr e1 : ((OperExpr) oe._lhs)._terms) 
+								if (e1 instanceof DoubleExpr) 
+									for (ArithExpr e2 : ((OperExpr) sov.obs._lhs)._terms) 
+									{
+										if (e2 instanceof DoubleExpr) 
+										{
+											//consider positive and negative numbers here
+											if ((((DoubleExpr) e1)._dConstVal>=0) && (((DoubleExpr) e2)._dConstVal>=0))
+												{
+												if (((DoubleExpr) e1)._dConstVal>((DoubleExpr) e2)._dConstVal)
+													return j;
+												}
+											else if ((((DoubleExpr) e1)._dConstVal<=0) && (((DoubleExpr) e2)._dConstVal<=0))
+											{
+												if (((DoubleExpr) e1)._dConstVal<((DoubleExpr) e2)._dConstVal)
+													return j;
+											}
+											else if ((((DoubleExpr) e1)._dConstVal>=0) && (((DoubleExpr) e2)._dConstVal<=0))
+											{
+													return j;
+											}
+											//no forth comparison
+											
+										}
+									}
+						}
+						
+						
+					}
+				}
+
 			}
 		}
 		return -1;

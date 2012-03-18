@@ -102,7 +102,7 @@ public class CPOMDP {
 		_context._hmMaxVal = parser._maxCVal;
 		_context._hmMinVal = parser._minCVal;
 		_context._hsBooleanVars = parser.getBVars();
-
+		
 		_alConstraints = parser.getConstraints();
 		_nMaxIter = parser.getIterations();
 		_bdDiscount = parser.getDiscount();
@@ -120,6 +120,7 @@ public class CPOMDP {
 		_alContOVars = new ArrayList<String>(Intern(parser.getOVars())); // Retain order given in MDP file
 		_alContAllVars = new ArrayList<String>(_alContSVars);
 		_alContAllVars.addAll(_alContOVars);
+		_context._hmContinuousVars = _alContAllVars;
 
 		
 		
@@ -193,6 +194,18 @@ public class CPOMDP {
 			for (Map.Entry<String,COAction> me : _hmName2Action.entrySet()) {
 
 				counter++;
+				//a test alpha in the set
+				ArrayList l0 =new ArrayList();
+				l0.add("[-200 + t*1 >=0]");
+				ArrayList l0t = new ArrayList();
+				ArrayList l0f = new ArrayList();
+				l0t.add("-1000");
+				l0f.add("100");
+				l0.add(l0t);
+				l0.add(l0f);
+				int alpha = _context.buildCanonicalXADD(l0);
+				_previousgammaSet_h.put(0, alpha);
+				//
 				int regr = _gammaHelper.computeGamma(me.getValue(),_previousgammaSet_h);
 				//the result is Gamma^h_a, add this to the current set of Gamma^h_a
 				regr = _context.reduceLinearize(regr);
