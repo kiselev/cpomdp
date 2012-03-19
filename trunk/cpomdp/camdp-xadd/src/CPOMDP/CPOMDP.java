@@ -173,7 +173,7 @@ public class CPOMDP {
 		//////////////////////////////////////////////////////////////////////////
 		
 		// Initialize value function to zero
-		_currentgammaSet_h.put(0,_context.getTermNode(XADD.ZERO));
+		_currentgammaSet_h.put(0,_context.getTermNode(XADD.NEG_ONE));
 		_valueDD = _context.getTermNode(XADD.ZERO);
 		// Perform value iteration for specified number of iterations, or until convergence detected
 		while (_nCurIter < max_iter) 
@@ -193,7 +193,7 @@ public class CPOMDP {
 			_maxDD = null;
 			for (Map.Entry<String,COAction> me : _hmName2Action.entrySet()) {
 
-				counter++;
+				//counter++;
 				//a test alpha in the set
 				ArrayList l0 =new ArrayList();
 				l0.add("[-200 + t*1 >=0]");
@@ -204,14 +204,15 @@ public class CPOMDP {
 				l0.add(l0t);
 				l0.add(l0f);
 				int alpha = _context.buildCanonicalXADD(l0);
-				_previousgammaSet_h.put(0, alpha);
+				_previousgammaSet_h.put(1, alpha);
+
 				//
-				int regr = _gammaHelper.computeGamma(me.getValue(),_previousgammaSet_h);
+				int[] regr = _gammaHelper.computeGamma(me.getValue(),_previousgammaSet_h);
 				//the result is Gamma^h_a, add this to the current set of Gamma^h_a
-				regr = _context.reduceLinearize(regr);
-				regr = _context.reduceLP(regr,_alContAllVars);
-				
-				_currentgammaSet_h.put(counter, regr);
+				//regr = _context.reduceLinearize(regr);
+				//regr = _context.reduceLP(regr,_alContAllVars);
+				for (int j=0;j<regr.length;j++)
+					_currentgammaSet_h.put(counter++, regr[j]);
 				
 				flushCaches();
 			}
