@@ -29,19 +29,20 @@ public class ComputeGamma {
 	CPOMDP _pomdp = null;
 	private IntTriple _contRegrKey = new IntTriple(-1,-1,-1);
 	HashMap<Integer,PartitionObsState> _obspartitionset= new HashMap<Integer,PartitionObsState>();
+	HashMap<Integer, Integer> newalphas = new HashMap<Integer, Integer>();
 	public ComputeGamma(XADD xadd,CPOMDP pomdp)
 	{
 		_context = xadd;
 		_pomdp = pomdp;
 	}
-	public int computeGamma(COAction a, HashMap<Integer, Integer> _previousgammaSet_h) {
+	public int[] computeGamma(COAction a, HashMap<Integer, Integer> _previousgammaSet_h) {
 
 		//first generate relevant observation partitions
 		generateRelObs(a,_previousgammaSet_h);
-		// for each of the alpha-vectors in the previous gammaset
-		int crossSum = _context.getTermNode(XADD.ZERO);
+		
 		for (Map.Entry<Integer,Integer> j : _previousgammaSet_h.entrySet())
 		{
+			// for each of the alpha-vectors in the previous gammaset:regress alpha's first
 			XADDNode n = _context.getNode(j.getValue());			
 			
 			HashSet<String> state_vars_in_vfun  = n.collectVars();
@@ -102,21 +103,72 @@ public class ComputeGamma {
 			}
 			
 			//finished regress, for each G_{a,j}^h add to the cross-sum result
-			crossSum = _context.apply(crossSum, q, _context.SUM);
+			newalphas.put(newalphas.size(), q);
 			
 		}
-		crossSum = _context.apply(a._reward,  
-				_context.scalarOp(crossSum, _pomdp._bdDiscount.doubleValue(), XADD.PROD), 
-				XADD.SUM);	
+		//now we have the regressed alpha's and the probability of each observation partition. 
+		//for each observation, multipy in the alphas
+		//the state in the observation set are not in form of XADD, so need to convert them
+		int[][] regressedAlpha = new int[_obspartitionset.size()][newalphas.size()];
+		for (int i = 0;i< _obspartitionset.size();i++)
+		{
+			//form an xadd from the state partitions and their probabilities
+			HashMap<Integer, StateObsVector> pos = _obspartitionset.get(i)._relObsProb;
+			//only has 2 possibilities, either has one partition, where the probability is zero otherwise. Or has overlapped partitions, where the probability 
+			//of each state is given
+			int nodeO=0;
+			if (pos.size()==1)
+			{
+				Decision d =  _context.new ExprDec(pos.get(0).state);
+				nodeO = _context.getVarNode(d,0.0,pos.get(0).probability);
+			}
+			else if (pos.size()==2)
+			{
+				Decision d1 = _context.new ExprDec(pos.get(0).state);
+				Decision d2 = _context.new ExprDec(pos.get(1).state);
+				int intd2 = _context.getVarIndex(d2);
+				int intd1 = _context.getVarIndex(d1);
+				if (intd1 == Math.abs(intd2))
+				{
+					if (intd1>0)
+					{
+						nodeO = _context.getVarNode(d1,pos.get(1).probability,pos.get(0).probability);
+					}
+					else 
+					{
+						nodeO = _context.getVarNode(d2,pos.get(0).probability,pos.get(1).probability);
+					}
+				}
 
-    	// Ensure Q-function is properly constrained and minimal (e.g., subject to constraints)
+			}
+			//any other configuration? 
+			for (int j=0;j<newalphas.size();j++)
+			{
+				regressedAlpha[i][j] = _context.apply(newalphas.get(j), nodeO, _context.PROD);
+				regressedAlpha[i][j] = _context.reduceLP(regressedAlpha[i][j] , _pomdp._alContAllVars);
+			}
+		}
+		int crossSum[] = new int[(int) Math.pow(newalphas.size(), _obspartitionset.size())];
+		//now we need the cross-sum based on different configurations of the observation (alpha1,alpha1,alpha1... alpha2,alpha2,alpha2)
+		int counter=0;
+		for (int j1=0;j1<newalphas.size();j1++)
+			for (int j2=0;j2<newalphas.size();j2++)
+				for (int j3=0;j3<newalphas.size();j3++)
+					{
+						crossSum[counter] = _context.apply(regressedAlpha[0][j1],(_context.apply(regressedAlpha[1][j2], regressedAlpha[2][j3], _context.SUM)),_context.SUM);
+						counter++;
+					}
+		
+		for (int j=0;j<crossSum.length;j++)		
+			crossSum[j] = _context.apply(a._reward, _context.scalarOp(crossSum[j], _pomdp._bdDiscount.doubleValue(), XADD.PROD), XADD.SUM);	
+
+    	/*// Ensure Q-function is properly constrained and minimal (e.g., subject to constraints)
 		for (Integer constraint : _pomdp._alConstraints)
 			crossSum = _context.apply(crossSum, constraint, XADD.PROD);
 		if (_pomdp._alConstraints.size() > 0)
 			crossSum = _context.reduceLP(crossSum,_pomdp._alContAllVars);
+		*/
 		
-		// Optional Display
-		_pomdp._logStream.println("- Q^" + _pomdp._nCurIter + "(" + a._sName + ", " + " )\n" + _context.getString(crossSum));
 		
 		return crossSum;
 	}
@@ -216,23 +268,26 @@ public class ComputeGamma {
 						 //low branch uses the negation of the actual expression
 						 int sign = oe._expr._type;
 						 CompExpr negoeC = new CompExpr(oe._expr._type, oe._expr._lhs, oe._expr._rhs);
-						 
-						 if ( sign == _context.LT_EQ || sign == _context.LT) 
+						 negoeC._type= negoeC.flipCompOper(negoeC._type);
+						 /*if ( sign == _context.LT_EQ || sign == _context.LT) 
 							 negoeC._type = _context.GT_EQ;
 						 else if ( sign == _context.GT_EQ || sign == _context.GT) 
-							 negoeC._type = _context.LT_EQ;
+							 negoeC._type = _context.LT_EQ;*/
 						int oo = overlapObservation(negoeC);
+						CompExpr negoeS = new CompExpr(e._expr._type, e._expr._lhs, e._expr._rhs);
+						if (branch==0) 
+							negoeS._type = negoeS.flipCompOper(negoeS._type);
 						if (oo != -1)
 						{
 							obsS = _obspartitionset.get(oo);
-							StateObsVector so = new StateObsVector(e._expr, negoeC,low1);
+							StateObsVector so = new StateObsVector(negoeS, negoeC,low1);
 							obsS.setnewPartition(so);
 							_obspartitionset.put(oo, obsS);
 
 						}
 						else //no overlap, add new partition
 						{
-							StateObsVector so = new StateObsVector(e._expr, negoeC,low1);
+							StateObsVector so = new StateObsVector(negoeS, negoeC,low1);
 							obsS = new PartitionObsState();
 							obsS.setnewPartition(so);
 							_obspartitionset.put(_obspartitionset.size(), obsS);	
@@ -242,13 +297,13 @@ public class ComputeGamma {
 						if (oo!=-1)
 						{
 							obsS = _obspartitionset.get(oo);
-							StateObsVector so = new StateObsVector(e._expr, oe._expr,high1);
+							StateObsVector so = new StateObsVector(negoeS, oe._expr,high1);
 							obsS.setnewPartition(so);
 							_obspartitionset.put(oo, obsS);
 						}
 						else //no overlap, add new partition
 						{
-							StateObsVector so = new StateObsVector(e._expr, oe._expr,high1);
+							StateObsVector so = new StateObsVector(negoeS, oe._expr,high1);
 							obsS = new PartitionObsState();
 							obsS.setnewPartition(so);
 							_obspartitionset.put(_obspartitionset.size(), obsS);
