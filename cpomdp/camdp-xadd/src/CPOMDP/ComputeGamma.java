@@ -41,7 +41,7 @@ public class ComputeGamma {
 		_obspartitionset= new HashMap<Integer,PartitionObsState>();
 		newalphas = new HashMap<Integer, Integer>();
 		generateRelObs(a,_previousgammaSet_h);
-		
+		_pomdp._obspartitions.putAll(_obspartitionset);
 		for (Map.Entry<Integer,Integer> j : _previousgammaSet_h.entrySet())
 		{
 			// for each of the alpha-vectors in the previous gammaset:regress alpha's first
@@ -111,6 +111,7 @@ public class ComputeGamma {
 		//now we have the regressed alpha's and the probability of each observation partition. 
 		//for each observation, multipy in the alphas
 		//the state in the observation set are not in form of XADD, so need to convert them
+		
 		int[][] regressedAlpha = new int[_obspartitionset.size()][newalphas.size()];
 		for (int i = 0;i< _obspartitionset.size();i++)
 		{
