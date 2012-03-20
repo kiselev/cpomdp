@@ -38,6 +38,8 @@ public class ComputeGamma {
 	public int[] computeGamma(COAction a, HashMap<Integer, Integer> _previousgammaSet_h) {
 
 		//first generate relevant observation partitions
+		_obspartitionset= new HashMap<Integer,PartitionObsState>();
+		newalphas = new HashMap<Integer, Integer>();
 		generateRelObs(a,_previousgammaSet_h);
 		
 		for (Map.Entry<Integer,Integer> j : _previousgammaSet_h.entrySet())
@@ -145,7 +147,7 @@ public class ComputeGamma {
 			for (int j=0;j<newalphas.size();j++)
 			{
 				regressedAlpha[i][j] = _context.apply(newalphas.get(j), nodeO, _context.PROD);
-				regressedAlpha[i][j] = _context.reduceLP(regressedAlpha[i][j] , _pomdp._alContAllVars);
+				regressedAlpha[i][j] = _context.reduceLP(regressedAlpha[i][j] , _pomdp._alContSVars);
 			}
 		}
 		int crossSum[] = new int[(int) Math.pow(newalphas.size(), _obspartitionset.size())];
