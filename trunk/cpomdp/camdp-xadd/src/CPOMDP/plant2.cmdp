@@ -22,7 +22,7 @@ endaction
 
 action close
 
-t' ([t-35])
+t' ([-35 + t])
 r' (r
 		([0.9])
 		([0.1]))

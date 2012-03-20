@@ -218,7 +218,7 @@ public class CPOMDP {
 			}
 
 			//pruning the _alpha vectors
-			//_currentgammaSet_h = dominanceTest(_currentgammaSet_h);
+			_currentgammaSet_h = dominanceTest(_currentgammaSet_h);
 			//TODO: taking a max to display the value function????
 			_logStream.println("- V^" + _nCurIter + _context.getString(_valueDD));
 			doDisplay(_valueDD, _logFileRoot + ": V^"+_nCurIter);
@@ -254,6 +254,11 @@ public class CPOMDP {
 	}
 	
 	
+	private HashMap<Integer, Integer> dominanceTest(HashMap<Integer, Integer> _currentgammaSet_h2) {
+		
+		return null;
+	}
+
 	////////////////////////////////////////////////////////////////////////////
 	// Miscellaneous
 	////////////////////////////////////////////////////////////////////////////
