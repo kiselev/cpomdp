@@ -82,7 +82,7 @@ public class CPOMDP {
 	public ComputeGamma _gammaHelper = null;
 	public HashMap<Integer,Integer> _currentgammaSet_h;
 	public HashMap<Integer,Integer> _previousgammaSet_h;
-	
+	public HashMap<Integer,PartitionObsState> _obspartitions= new HashMap<Integer,PartitionObsState>();
 	public CPOMDP(String filename) {
 		this(filename, HierarchicalParser.ParseFile(filename));
 	}
