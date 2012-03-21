@@ -255,7 +255,21 @@ public class CPOMDP {
 	
 	
 	private HashMap<Integer, Integer> dominanceTest(HashMap<Integer, Integer> _currentgammaSet_h2) {
-		
+		for (int i=0;i<_currentgammaSet_h2.size();i++)
+		{
+			for (int j=0;j<_currentgammaSet_h2.size();j++)
+			{
+				if (i!=j)
+				{
+					int result = _context.apply(_currentgammaSet_h2.get(i), _currentgammaSet_h2.get(j), _context.MAX);
+					result = _context.reduceLP(result,_alContSVars );
+					if (result == _currentgammaSet_h2.get(i))
+						_currentgammaSet_h2.put(i, 0);
+					else if (result == _currentgammaSet_h2.get(j))
+						_currentgammaSet_h2.put(j, 0);
+				}
+			}
+		}
 		return null;
 	}
 
