@@ -4,9 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.omg.stub.java.rmi._Remote_Stub;
 
@@ -25,14 +23,14 @@ import xadd.XADD.XADDINode;
 import xadd.XADD.XADDNode;
 import xadd.XADD.XADDTNode;
 
-public class ComputeGamma {
+public class ComputeGammaOld {
 
 	XADD _context = null;
 	CPOMDP _pomdp = null;
 	private IntTriple _contRegrKey = new IntTriple(-1,-1,-1);
 	HashMap<Integer,PartitionObsState> _obspartitionset= new HashMap<Integer,PartitionObsState>();
 	HashMap<Integer, Integer> newalphas = new HashMap<Integer, Integer>();
-	public ComputeGamma(XADD xadd,CPOMDP pomdp)
+	public ComputeGammaOld(XADD xadd,CPOMDP pomdp)
 	{
 		_context = xadd;
 		_pomdp = pomdp;
@@ -190,81 +188,71 @@ public class ComputeGamma {
 			ArithExpr obs_var = ArithExpr.parse(a._contObs.get(i));
 			for (int bo=0;bo<a._boolObs.size();bo++)
 			{
-				
-				if (a._boolObs.get(bo).contains(a._contObs.get(i)))
+				XADDNode obsnode = _context.getNode(a._hmObs2DD.get(a._contObs.get(i)));
+				//either a TNode which means no noise, or INODE where there is noise
+				if (obsnode instanceof XADDTNode)
 				{
-					XADDNode obsnode = _context.getNode(a._hmObs2DD.get(a._contObs.get(i)));
-					//either a TNode which means no noise, or INODE where there is noise
-					if (obsnode instanceof XADDTNode)
-					{
-						obs_subs = new HashMap<String,ArithExpr>();
-						obs_var = getVarCoeff(obs_var,((XADDTNode) obsnode)._expr);
-						obs_subs.put(a._contState.get(i), obs_var);
-					}
-					else if (obsnode instanceof XADDINode)
-					{
-						//always high followed by low
-						obs_subs = new HashMap<String,ArithExpr>();
-						XADDTNode high = (XADDTNode) _context.getNode(((XADDINode) obsnode)._high);
-						obs_var = getVarCoeff(obs_var,high._expr);
-						obs_var.makeCanonical();
-						obs_subs.put(a._contState.get(i), obs_var);
-						XADDTNode low1 = (XADDTNode) _context.getNode(((XADDINode) obsnode)._low);
-						obs_var = getVarCoeff(obs_var,low1._expr);
-						obs_var.makeCanonical();
-						obs_subs.put(a._contState.get(i), obs_var);
-						substituteVar(a,_previousgammaSet_h, obs_subs);
-					}
+					obs_subs = new HashMap<String,ArithExpr>();
+					obs_var = getVarCoeff(obs_var,((XADDTNode) obsnode)._expr);
+					obs_subs.put(a._contState.get(i), obs_var);
+				}
+				else if (obsnode instanceof XADDINode)
+				{
+					obs_subs = new HashMap<String,ArithExpr>();
+					XADDTNode high = (XADDTNode) _context.getNode(((XADDINode) obsnode)._high);
+					obs_var = getVarCoeff(obs_var,high._expr);
+					obs_var.makeCanonical();
+					obs_subs.put(a._contState.get(i), obs_var);
+					
+					low = false;
 				}
 			}
 		}
-		
+		substituteVar(a,_previousgammaSet_h, obs_subs,1);
+		if (low ==false)
+		{
+			for (int i=0;i<a._contObs.size();i++)
+			{
+				//first find the obs_subs that are to be substituted in each alpha-vector. 
+				//Note that this operation is only for no noise or binary noise
+				ArithExpr obs_var = ArithExpr.parse(a._contObs.get(i));
+				for (int bo=0;bo<a._boolObs.size();bo++)
+				{
+					XADDNode obsnode = _context.getNode(a._hmObs2DD.get(a._contObs.get(i)));
+					obs_subs = new HashMap<String,ArithExpr>();
+					obs_var = null;
+					obs_var = ArithExpr.parse(a._contObs.get(i));
+					XADDTNode low1 = (XADDTNode) _context.getNode(((XADDINode) obsnode)._low);
+					obs_var = getVarCoeff(obs_var,low1._expr);
+					obs_var.makeCanonical();
+					obs_subs.put(a._contState.get(i), obs_var);
+				}
+			}
+			substituteVar(a,_previousgammaSet_h, obs_subs,0);
+		}
 	}
-	public void substituteVar(COAction a, HashMap<Integer, Integer> _previousgammaSet_h, HashMap<String,ArithExpr> obs_subs)
+	public void substituteVar(COAction a, HashMap<Integer, Integer> _previousgammaSet_h, HashMap<String,ArithExpr> obs_subs,int branch)
 	{
 		//find observation  partitions of all the vectors, avoid overlapping
-		//keep a string for alpha-vector number,obs_sub(observation number, high or low),true or false branch of the observation tree.
-		HashMap<String,Integer> _xaddObsTrees = new HashMap<String, Integer>();
 		for (int j=0;j<_previousgammaSet_h.size();j++)
 		{
 			//keep a hashmap for probability, and hashmap of (state partition it came from and the obs partition )
-			for (int i=0;i<obs_subs.size();i++)
-			{
-				int[] obstreeSub= new int[2*a._contState.size()];//for each path of alpha-vector that depends on number of state-variables 
-				int subst_obs = _context.substitute(_previousgammaSet_h.get(j), obs_subs);
-				XADDNode n = _context.getNode(_previousgammaSet_h.get(j));
-				XADDNode o = _context.getNode(subst_obs);
-				if (o instanceof XADDINode)
-				{
-					//need to replace leaves with zero and one (one tree for each path)
-					_xaddObsTrees = buildObsTree(o,_xaddObsTrees);
-					
-				}
-				
+			int subst_obs = _context.substitute(_previousgammaSet_h.get(j), obs_subs);
+			XADDNode n = _context.getNode(_previousgammaSet_h.get(j));
+			XADDNode o = _context.getNode(subst_obs);
+			if (n instanceof XADDTNode)
+			{//there is no phi in a Tnode, don't add to observation partitions
 			}
-		}
-
-		//take cross-product 
-		Iterator<Entry<String, Integer>> iterator1 = _xaddObsTrees.entrySet().iterator();
-		Iterator<Entry<String, Integer>> iterator2 = _xaddObsTrees.entrySet().iterator();
-		iterator2.next();
-		while (iterator1.hasNext() && iterator2.hasNext()) 
-		{
-			 Entry<String, Integer> xadd1 = iterator1.next();
-			 Entry<String, Integer> xadd2 = iterator1.next();
-			 int result = _context.apply(xadd1.getValue(), xadd2.getValue(), _context.PROD);
-			 
-		}
-				if (n instanceof XADDINode)
+			if (n instanceof XADDINode)
+			{
+				int sp = ((XADDINode)n)._var;
+				int op = ((XADDINode)o)._var;
+				Decision d =  _context._alOrder.get(sp);
+				Decision od=  _context._alOrder.get(op);
+				double low1=0,high1=0;
+				if (d instanceof ExprDec)
 				{
-					int sp = ((XADDINode)n)._var;
-					int op = ((XADDINode)o)._var;
-					Decision d =  _context._alOrder.get(sp);
-					Decision od=  _context._alOrder.get(op);
-					double low1=0,high1=0;
-					if (d instanceof ExprDec)
-					{
-						ExprDec e = (ExprDec) d;
+					ExprDec e = (ExprDec) d;
 					ExprDec oe = (ExprDec) od;
 					oe = (ExprDec) oe.makeCanonical();
 					PartitionObsState obsS;
@@ -328,16 +316,11 @@ public class ComputeGamma {
 				
 				}
 			}
-			
+		}
 		
 	}
 				
 
-	private HashMap<String, Integer> buildObsTree(XADDNode o, HashMap<String, Integer> _xaddObsTrees) {
-		return null;
-		// TODO Auto-generated method stub
-		
-	}
 	private int overlapObservation(CompExpr oe) {
 		//compare all observation partitions < or > and if overlaps, return the number of that partitionset
 		for (int i=0;i<_obspartitionset.size();i++)
