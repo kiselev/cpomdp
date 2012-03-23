@@ -1,0 +1,53 @@
+cvariables (t)
+min-values (0)
+max-values (400)
+bvariables ()
+ovariables(o1 o2)
+
+action open
+
+t' ([t+50])
+	
+reward 	([-1])     					
+endaction
+
+observation
+o1 
+	([t<=200]
+	([0.1]) 
+	([0.9]) 
+	)
+o2 
+	([t<=200]
+	([0.9]) 
+	([0.1]) 
+	)
+endobservation
+
+action close
+
+t' ([-35 + t])
+		
+reward 	([t <= 200]
+				([100])
+				([-1000]))
+					
+      					
+endaction
+
+observation
+o1 
+	([t<=200]
+	([0.1]) 
+	([0.8]) 
+	)
+o2 
+	([t<=200]
+	([0.9]) 
+	([0.2]) 
+	)
+endobservation
+
+discount 1.000000
+iterations 12
+
