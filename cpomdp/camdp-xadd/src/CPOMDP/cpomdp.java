@@ -16,6 +16,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import CPOMDP.discreteObs.DiscreteObsGamma;
+import CPOMDP.discreteObs.DiscreteParsePOMDP;
 import DPOMDP.GammaSet;
 
 import camdp.CAMDP;
@@ -27,13 +29,12 @@ import xadd.TestXADDDist;
 import xadd.XADD;
 import xadd.XADD.ArithExpr;
 
-public class CPOMDP {
+public class cpomdp {
 
 	/* Constants */
 	public final static String RESULTS_DIR = "results"; // Diagnostic output destination
 	public final static boolean DISPLAY_V = true;
 	public final static boolean DISPLAY_G = true;
-
 	/* Maintain an explicit policy? */
 	public final static boolean MAINTAIN_POLICY = false;
 
@@ -79,15 +80,16 @@ public class CPOMDP {
 	public HashMap<IntTriple,Integer> _hmContRegrCache;
 	public ArrayList<Integer>         _alConstraints;
 	
-	public ComputeGamma _gammaHelper = null;
+	//public ComputeGamma _gammaHelper = null;
+	public DiscreteObsGamma _gammaHelper = null;
 	public HashMap<Integer,Integer> _currentgammaSet_h;
 	public HashMap<Integer,Integer> _previousgammaSet_h;
 	public HashMap<Integer,PartitionObsState> _obspartitions= new HashMap<Integer,PartitionObsState>();
-	public CPOMDP(String filename) {
+	public cpomdp(String filename) {
 		this(filename, HierarchicalParser.ParseFile(filename));
 	}
 
-	public CPOMDP(String file_source, ArrayList input) {
+	public cpomdp(String file_source, ArrayList input) {
 
 		// Basic initializations
 		_problemFile = file_source;
@@ -97,7 +99,8 @@ public class CPOMDP {
 		_bdDiscount = new BigDecimal("" + (-1));
 		_nMaxIter = null;
 		// Setup CAMDP according to parsed file contents
-		ParsePOMDP parser = new ParsePOMDP(this);
+		DiscreteParsePOMDP parser = new DiscreteParsePOMDP(this);
+		// ParsePOMDP parser = new ParsePOMDP(this);
 		parser.buildPOMDP(input);
 		_context._hmMaxVal = parser._maxCVal;
 		_context._hmMinVal = parser._minCVal;
@@ -124,7 +127,8 @@ public class CPOMDP {
 
 		
 		
-		_gammaHelper = new ComputeGamma(_context, this);
+		//_gammaHelper = new ComputeGamma(_context, this);
+		_gammaHelper = new DiscreteObsGamma(_context, this);
 		_previousgammaSet_h = new HashMap<Integer, Integer>();
 		_currentgammaSet_h = new HashMap<Integer, Integer>();
 		// Build cur-state var -> next-state var map
@@ -146,12 +150,6 @@ public class CPOMDP {
 		}
 	}
 
-	
-	
-	
-	
-	
-	
 	
 	////////////////////////////////////////////////////////////////////////////
 	// Main value iteration routine
@@ -212,16 +210,23 @@ public class CPOMDP {
 				//regr = _context.reduceLinearize(regr);
 				//regr = _context.reduceLP(regr,_alContAllVars);
 				for (int j=0;j<regr.length;j++)
+				{
 					_currentgammaSet_h.put(counter++, regr[j]);
+					doDisplay(regr[j], ": alpha_vector"+(j+1)+"for action: "+ me.getValue()._sName);
+				}
 				
 				flushCaches();
 			}
 
 			//pruning the _alpha vectors
 			_currentgammaSet_h = dominanceTest(_currentgammaSet_h);
+			for (int j=0;j<_currentgammaSet_h.size();j++)
+			{
+				doDisplay(_currentgammaSet_h.get(j), "Dominated alpha_vector"+(j+1));
+			}
 			//TODO: taking a max to display the value function????
-			_logStream.println("- V^" + _nCurIter + _context.getString(_valueDD));
-			doDisplay(_valueDD, _logFileRoot + ": V^"+_nCurIter);
+			//_logStream.println("- V^" + _nCurIter + _context.getString(_valueDD));
+			//doDisplay(_valueDD, _logFileRoot + ": V^"+_nCurIter);
 			
 			//////////////////////////////////////////////////////////////////////////
 			// Value iteration statistics
@@ -270,7 +275,7 @@ public class CPOMDP {
 				}
 			}
 		}
-		return null;
+		return _currentgammaSet_h2;
 	}
 
 	////////////////////////////////////////////////////////////////////////////
@@ -517,7 +522,7 @@ public class CPOMDP {
 		}
 
 		// Build a CAMDP, display, solve
-		CPOMDP pomdp = new CPOMDP(filename);
+		cpomdp pomdp = new cpomdp(filename);
 		pomdp.DISPLAY_2D = Boolean.parseBoolean(args[2]);
 		pomdp.DISPLAY_3D = Boolean.parseBoolean(args[3]);
 		System.out.println(pomdp.toString(false, false));

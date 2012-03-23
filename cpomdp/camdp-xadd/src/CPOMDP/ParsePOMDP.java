@@ -5,10 +5,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import CPOMDP.COAction;
-import CPOMDP.CPOMDP;
-
-
 import xadd.XADD;
 import xadd.XADD.ArithExpr;
 import xadd.XADD.DoubleExpr;
@@ -16,7 +12,7 @@ import xadd.XADD.DoubleExpr;
 
 public class ParsePOMDP {
 	
-	CPOMDP _pomdp=null;
+	cpomdp _pomdp=null;
 	
 	public final static ArithExpr ZERO = new DoubleExpr(0d);
 	public final static ArithExpr ONE = new DoubleExpr(1d);
@@ -31,7 +27,7 @@ public class ParsePOMDP {
 	Integer iterations ;
 	HashMap<String, COAction> hashmap = new HashMap<String, COAction>();
 	
-	public ParsePOMDP(CPOMDP pomdp)
+	public ParsePOMDP(cpomdp pomdp)
 	{
 		_pomdp = pomdp;
 

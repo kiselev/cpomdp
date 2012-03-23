@@ -26,11 +26,11 @@ import xadd.XADD.XADDTNode;
 public class ComputeGammaOld {
 
 	XADD _context = null;
-	CPOMDP _pomdp = null;
+	cpomdp _pomdp = null;
 	private IntTriple _contRegrKey = new IntTriple(-1,-1,-1);
 	HashMap<Integer,PartitionObsState> _obspartitionset= new HashMap<Integer,PartitionObsState>();
 	HashMap<Integer, Integer> newalphas = new HashMap<Integer, Integer>();
-	public ComputeGammaOld(XADD xadd,CPOMDP pomdp)
+	public ComputeGammaOld(XADD xadd,cpomdp pomdp)
 	{
 		_context = xadd;
 		_pomdp = pomdp;
