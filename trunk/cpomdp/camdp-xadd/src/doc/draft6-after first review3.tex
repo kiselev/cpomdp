@@ -499,8 +499,8 @@ G_{open}^2=  \top &: -1
 				\ForEach {$\alpha_j^{h-1} \in \Gamma^{h-1}$}
        			{
    	 		  		$\alpha_j^{h'}=$ \remapWithPrimes{$\alpha_j^{h}$} \;
-   	 		  		\emph{// $\forall$ $d_i \to d_i'$ and $\forall x_i \to x_i'$} \; 
-   	 		    	$\Gamma_{a,o_i,j}^h \,:=\, o_i \otimes$ \backup{$\alpha_j^{h'},a$}\;
+   	 		  		\emph{// $\forall$ $d_{s_i} \to d'_{s_i}$ and $\forall x_{s_i} \to x'_{s_i}$} \; 
+   	 		    	$\Gamma_{a,o_i,j}^h \,:=\, P(o_i|xd'_s) \otimes$ \backup{$\alpha_j^{h'},a$}\;
        	      	}
        	      	$\Gamma_{a,o}^h\,:=\,\textrm{\large $\boxplus$} \Gamma_{a,o_i}^h$\;
        	     }
@@ -529,86 +529,128 @@ $\Gamma^1 = \{ \alpha^1_{1,open}, \alpha^1_{1,close} \}$.
 
 For $h=2$, for each of the discrete actions, first we generate the relevant set of observations. This has been done for the $close$ action in the previous section. Next for each of the relevant partitions and both $\alpha$-vectors of the previous $\Gamma$ set lines 8--15 are executed. 
 
-Line 10 will substitute prime values for all state variables. Line 12 produces the backup $\alpha$-vector and multiplies it by the weight derived from the relevant observation partition. For each observation, two vectors are formed for each corresponding $\alpha$-vector. For example line 12 for observations $O_2,O_3$ and $\alpha_1^1,\alpha_2^1$ is defined as:
+Line 10 will substitute prime values for all state variables. Line 12 produces the backup $\alpha$-vector and multiplies it by the weight derived from the relevant observation partition. For each observation, two vectors are formed for each corresponding $\alpha$-vector. For example line 12 for observations $O_1,O_2,O_3$ and $\alpha_1^1,\alpha_2^1$ is defined as:
 
 \begin{align*}
-%\begin{cases}
-%\Gamma_{close,O_1,1}^2= 
-%\begin{cases}
-%(200<t_o<300) \wedge (t_s'>235) &: -900 \\
-%(200<t_o<300)\wedge (200<t_s'<235) &: 90 \\
-%(200<t_o<300) \wedge (t_s'<200) &: -10 \\
-%\end{cases}
-%\\
-%\Gamma_{close,O_1,2}^2= 
-%\begin{cases}
-%(200<t_o<300) \wedge (t_s'>200) &: -0.9 \\
-%(200<t_o<300) \wedge (t_s'<200) &: -0.1 \\
-%\end{cases}
-%\end{cases}
-%\\
+\begin{cases}
+\Gamma_{close,O_1,1}^2= 
+\begin{cases}
+(t_s'>235) &: -900 \\
+(200<t_s'<235) &: 90 \\
+(t_s'<200) &: -10 \\
+\end{cases}
+\\
+\Gamma_{close,O_1,2}^2= 
+\begin{cases}
+(t_s'>200) &: -0.9 \\ 
+(t_s'<200) &: -0.1 \\
+\end{cases}
+\end{cases}
+\\
 \begin{cases}
 \Gamma_{close,O_2,1}^2= 
 \begin{cases}
-(t_o>300) \wedge (t_s'>235) &: -100 \\
-(t_o>300)\wedge (200<t_s'<235) &: 10 \\
-(t_o>300) \wedge (t_s'<200) &: 0 \\
+ (t_s'>235) &: -100 \\
+(200<t_s'<235) &: 10 \\
+(t_s'<200) &: 0 \\
 \end{cases}
 \\
 \Gamma_{close,O_2,2}^2= 
 \begin{cases}
-(t_o>300)\wedge (t_s'>200) &: -0.1 \\
-(t_o>300) \wedge (t_s'<200) &: 0 \\
+ (t_s'>200) &: -0.1 \\
+ (t_s'<200) &: 0 \\
 \end{cases}
 \end{cases}
 \\
 \begin{cases}
 \Gamma_{close,O_3,1}^2= 
 \begin{cases}
-(t_o<200) \wedge (t_s'>235) &: -900 \\
-(t_o<200)\wedge (200<t_s'<235) &: 90 \\
-(t_o<200) \wedge (t_s'<200) &: 0 \\
+ (t_s'>235) &: -900 \\
+ (200<t_s'<235) &: 90 \\
+ (t_s'<200) &: 0 \\
 \end{cases}
 \\
 \Gamma_{close,O_3,2}^2= 
 \begin{cases}
-(t_o<200) \wedge (t_s'>200) &: -0.9 \\
-(t_o<200)\wedge (t_s'<200) &: 0 \\
+ (t_s'>200) &: -0.9 \\
+(t_s'<200) &: 0 \\
 \end{cases}
 \end{cases}
 \end{align*}
 
-Next in line 13 we have to take the cross-sum of the two sets which takes every possible combination of observations according to the $\alpha$-vectors. This means for $O_2 \textrm{\large $\boxplus$} O_3$ we have the following vectors: 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}[t]
+\begin{center}
+\includegraphics[width=0.4\textwidth]{policy2.pdf}
+\end{center}
+\vspace{-3mm}
+\caption{%\footnotesize 
+An example of a policy tree in \textsc{Power Plant}
+for the $close$ action, $O_1,O_3$ based on $\alpha_1^1$ and $O_2$ based on $\alpha_2^1$.} 
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Next in line 13 we have to take the cross-sum of the two sets which takes every possible combination of observations according to the $\alpha$-vectors. This means for $O_1 \textrm{\large $\boxplus$} O_2 \textrm{\large $\boxplus$} O_3$ we have 8 vectors where the first 4 combination  have been shown below: 
 
 \begin{align*}
 \begin{cases}
 \begin{cases}
-(t_s'>235) &: -1000 \\
-(200<t_s'<235) &: 100 \\
-(t_s'<200) &: 0 \\
+(t_s'>235) &: -1900 \\
+(200<t_s'<235) &: 190 \\
+(t_s'<200) &: -10 \\
 \end{cases}
 \\
 \begin{cases}
-(t_s'>235) &: -100.9 \\
-(<200<t_s'<235) &: 9.1 \\
-(t_s'<200) &: 0 \\
+(t_s'>235) &: -1000.9 \\
+(<200<t_s'<235) &: 99.1 \\
+(t_s'<200) &: -10 \\
 \end{cases}
 \\
 \begin{cases}
- (t_s'>235) &: -900 \\
- (200<t_s'<235) &: 89.9 \\
- (t_s'<200) &: 0 \\
+ (t_s'>235) &: -1800.1 \\
+ (200<t_s'<235) &: 179.9 \\
+ (t_s'<200) &: -10 \\
 \end{cases}
 \\
 \begin{cases}
-(t_s'>200) &: -1 \\
-(t_s'<200) &: 0 \\
+ (t_s'>235) &: -901 \\
+ (200<t_s'<235) &: 89 \\
+ (t_s'<200) &: -10 \\
 \end{cases}
 \end{cases}
 \end{align*}
 
-Where the observation partitions ($t_o>300 , t_o<200$) are inconsistent and therefore omitted from the result. These 4 vectors are added with the two vectors from $\Gamma_{close,O_1}^2$ to get $2^3$ different vectors. All 8 vectors are multiplied by the discount $\gamma$ and added with the reward in line 14 where the addition is an augmented $\oplus$ for adding each vector with the reward function. 
-% need to add this?
+We have shown the policy tree for the third vector in figure 3. The weights here are distributed according to each of the observations while the first and last partition choose to take a backup from the $\alpha_1^1$ and the middle partition uses $\alpha_2^1$. 
+All 8 vectors are multiplied by the discount $\gamma$ and added with the reward in line 14 where the addition is an augmented $\oplus$ for adding each vector with the reward function. 
+
+\begin{align*}
+\begin{cases}
+\begin{cases}
+(t_s'>235) &: -2900 \\
+(200<t_s'<235) &: -810 \\
+(t_s'<200) &: 90 \\
+\end{cases}
+\\
+\begin{cases}
+(t_s'>235) &: -2000.9 \\
+(<200<t_s'<235) &: -900.9 \\
+(t_s'<200) &: 90 \\
+\end{cases}
+\\
+\begin{cases}
+ (t_s'>235) &: -2800.1 \\
+ (200<t_s'<235) &: -820.1 \\
+ (t_s'<200) &: 90 \\
+\end{cases}
+\\
+\begin{cases}
+ (t_s'>235) &: -1901 \\
+ (200<t_s'<235) &: -911 \\
+ (t_s'<200) &: 90 \\
+\end{cases}
+\end{cases}
+\end{align*}
+
 The same operation is performed for the $open$ action and 8 different vectors are formed here too. In line 15 the $\Gamma$ set for each action are added to the set of $\Gamma^h$ to build all the vectors (16 in total) for the next horizon. 
 
 In line 16 this final set is using in the \texttt{Prune} algorithm. For all $\alpha$-vectors in the current $\Gamma$-set first an LP-solver is used to prune any inconsistency in the branches of this vector. Next a pairwise dominance test is performed where for all $j,k$: 
