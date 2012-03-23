@@ -7,7 +7,7 @@ import xadd.XADD;
 
 public class COAction {
 
-	public CPOMDP _pomdp; // MDP of which this action is a part
+	public cpomdp _pomdp; // MDP of which this action is a part
 	public String _sName; // Name of this action
 	public ArrayList<Double> _contBounds = new ArrayList<Double>(2);
 	public HashMap<String, Integer> _hmVar2DD;
@@ -22,7 +22,7 @@ public class COAction {
 	 * @param aVars 
 	 * @param bVars 
 	 **/
-	public COAction(CPOMDP pomdp, String name, HashMap<String, ArrayList> cpt_desc,HashMap<String, ArrayList> cpt_obs, Integer reward, ArrayList<String> cont, ArrayList<String> oVars, ArrayList<String> bVars,ArrayList<String> boVars) {
+	public COAction(cpomdp pomdp, String name, HashMap<String, ArrayList> cpt_desc,HashMap<String, ArrayList> cpt_obs, Integer reward, ArrayList<String> cont, ArrayList<String> oVars, ArrayList<String> bVars,ArrayList<String> boVars) {
 
 		_pomdp = pomdp;
 		_sName = name;
