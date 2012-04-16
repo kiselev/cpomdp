@@ -3,7 +3,7 @@ package CPOMDP;
 import java.util.HashMap;
 
 public class PartitionObsState {
-		HashMap <Integer, StateObsVector> _relObsProb ;
+		public HashMap <Integer, StateObsVector> _relObsProb ;
 		
 		public PartitionObsState()
 		{

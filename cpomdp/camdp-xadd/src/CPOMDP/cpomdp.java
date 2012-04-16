@@ -16,9 +16,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import CPOMDP.discreteObs.DiscreteObsGamma;
-import CPOMDP.discreteObs.DiscreteParsePOMDP;
-import DPOMDP.GammaSet;
+import CPOMDP.contObs.ContComputeGamma;
+import CPOMDP.contObs.ContParsePOMDP;
 
 import camdp.CAMDP;
 import camdp.CAction;
@@ -81,7 +80,8 @@ public class cpomdp {
 	public ArrayList<Integer>         _alConstraints;
 	
 	//public ComputeGamma _gammaHelper = null;
-	public DiscreteObsGamma _gammaHelper = null;
+	//public DiscreteObsGamma _gammaHelper = null;
+	public ContComputeGamma _gammaHelper = null;
 	public HashMap<Integer,Integer> _currentgammaSet_h;
 	public HashMap<Integer,Integer> _previousgammaSet_h;
 	public HashMap<Integer,PartitionObsState> _obspartitions= new HashMap<Integer,PartitionObsState>();
@@ -99,7 +99,7 @@ public class cpomdp {
 		_bdDiscount = new BigDecimal("" + (-1));
 		_nMaxIter = null;
 		// Setup CAMDP according to parsed file contents
-		DiscreteParsePOMDP parser = new DiscreteParsePOMDP(this);
+		ContParsePOMDP parser = new ContParsePOMDP(this);
 		// ParsePOMDP parser = new ParsePOMDP(this);
 		parser.buildPOMDP(input);
 		_context._hmMaxVal = parser._maxCVal;
@@ -128,7 +128,8 @@ public class cpomdp {
 		
 		
 		//_gammaHelper = new ComputeGamma(_context, this);
-		_gammaHelper = new DiscreteObsGamma(_context, this);
+		//_gammaHelper = new DiscreteObsGamma(_context, this);
+		_gammaHelper = new ContComputeGamma(_context, this);
 		_previousgammaSet_h = new HashMap<Integer, Integer>();
 		_currentgammaSet_h = new HashMap<Integer, Integer>();
 		// Build cur-state var -> next-state var map
@@ -194,7 +195,7 @@ public class cpomdp {
 				//counter++;
 				//a test alpha in the set
 				ArrayList l0 =new ArrayList();
-				l0.add("[-200 + t*1 >=0]");
+				l0.add("[-10 + t*1 >=0]");
 				ArrayList l0t = new ArrayList();
 				ArrayList l0f = new ArrayList();
 				l0t.add("-1000");

@@ -4,8 +4,8 @@ import xadd.XADD.ArithExpr;
 import xadd.XADD.CompExpr;
 
 public class StateObsVector {
-		Double probability;
-		CompExpr state;
+		public Double probability;
+		public CompExpr state;
 		CompExpr obs; 
 		
 		public StateObsVector(CompExpr s,CompExpr o,Double p)
