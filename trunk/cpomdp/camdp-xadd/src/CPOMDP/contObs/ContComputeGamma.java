@@ -37,7 +37,10 @@ public class ContComputeGamma {
 	XADD _context = null;
 	cpomdp _pomdp = null;
 	private IntTriple _contRegrKey = new IntTriple(-1,-1,-1);
-	HashMap<Integer,PartitionObsState> _obspartitionset= new HashMap<Integer,PartitionObsState>();
+	HashMap<Integer,ObsPartition> _obspartitionset= new HashMap<Integer,ObsPartition>();
+	ObsPartition partition = new ObsPartition();
+	int partitionNo =0;
+	int[] regressedObservation;
 	HashMap<Integer, Integer> newalphas = new HashMap<Integer, Integer>();
 	int[] belief = new int[1];
 	public ContComputeGamma(XADD xadd,cpomdp pomdp)
@@ -65,11 +68,12 @@ public class ContComputeGamma {
 	public int[] computeGamma(COAction a, HashMap<Integer, Integer> _previousgammaSet_h) {
 
 		//first generate relevant observation partitions
-		_obspartitionset= new HashMap<Integer,PartitionObsState>();
+		_obspartitionset= new HashMap<Integer,ObsPartition>();
+		regressedObservation = new int[a._hmObs2DD.size()];
 		newalphas = new HashMap<Integer, Integer>();
 		for (int i=0;i<belief.length;i++)
 			generateRelObs(a,_previousgammaSet_h,belief[i]);
-		_pomdp._obspartitions.putAll(_obspartitionset);
+		//_pomdp._obspartitions.putAll(_obspartitionset);
 		for (Map.Entry<Integer,Integer> j : _previousgammaSet_h.entrySet())
 		{
 			// for each of the alpha-vectors in the previous gammaset:regress alpha's first
@@ -143,39 +147,12 @@ public class ContComputeGamma {
 		int[][] regressedAlpha = new int[_obspartitionset.size()][newalphas.size()];
 		for (int i = 0;i< _obspartitionset.size();i++)
 		{
-			//form an xadd from the state partitions and their probabilities
-			HashMap<Integer, StateObsVector> pos = _obspartitionset.get(i)._relObsProb;
-			//only has 2 possibilities, either has one partition, where the probability is zero otherwise. Or has overlapped partitions, where the probability 
-			//of each state is given
-			int nodeO=0;
-			if (pos.size()==1)
-			{
-				Decision d =  _context.new ExprDec(pos.get(0).state);
-				nodeO = _context.getVarNode(d,0.0,pos.get(0).probability);
-			}
-			else if (pos.size()==2)
-			{
-				Decision d1 = _context.new ExprDec(pos.get(0).state);
-				Decision d2 = _context.new ExprDec(pos.get(1).state);
-				int intd2 = _context.getVarIndex(d2);
-				int intd1 = _context.getVarIndex(d1);
-				if (intd1 == Math.abs(intd2))
-				{
-					if (intd1>0)
-					{
-						nodeO = _context.getVarNode(d1,pos.get(1).probability,pos.get(0).probability);
-					}
-					else 
-					{
-						nodeO = _context.getVarNode(d2,pos.get(0).probability,pos.get(1).probability);
-					}
-				}
-
-			}
-			//any other configuration? 
+		
+			double d = _obspartitionset.get(i).getProbability();
+			int dd = _context.getTermNode(ArithExpr.parse(Double.toString(d)));
 			for (int j=0;j<newalphas.size();j++)
 			{
-				regressedAlpha[i][j] = _context.apply(newalphas.get(j), nodeO, _context.PROD);
+				regressedAlpha[i][j] = _context.apply(newalphas.get(j), dd, _context.PROD);
 				regressedAlpha[i][j] = _context.reduceLP(regressedAlpha[i][j] , _pomdp._alContSVars);
 			}
 		}
@@ -207,8 +184,8 @@ public class ContComputeGamma {
 	private void generateRelObs(COAction a, HashMap<Integer, Integer> _previousgammaSet_h, int belief) 
 	{
 		//returns P(each observation partition|b)
-		//can check if \int_o\int_s p(o|s)*p(s) =1 
-		int check =0;
+		//can check if \int_o\int_s p(o|s')*p(s)p(s'|s) =1 
+		/*int check =0;
 		Iterator i1 = a._hmObs2DD.entrySet().iterator();
 		while (i1.hasNext()) 
 		{
@@ -218,7 +195,7 @@ public class ContComputeGamma {
 		for (int i=0;i<_pomdp._alContSVars.size();i++)
 			check = _context.computeDefiniteIntegral(check, _pomdp._alContSVars.get(i));
 		for (int i=0;i<_pomdp._alContOVars.size();i++)
-			check = _context.computeDefiniteIntegral(check, _pomdp._alContOVars.get(i));
+			check = _context.computeDefiniteIntegral(check, _pomdp._alContOVars.get(i));*/
 		
 			
 		//1 - for each alpha-vector: first integrate out s'
@@ -233,6 +210,7 @@ public class ContComputeGamma {
 
 		//substitute and regress observation model, for each variable there is a different set of alpha vectors
 		 Iterator it = a._hmObs2DD.entrySet().iterator();
+		 int cc =0;
 		while (it.hasNext()) 
 		{
 			Map.Entry pairs = (Map.Entry)it.next();
@@ -264,9 +242,9 @@ public class ContComputeGamma {
 					temp_cvar_names.set(0, cvar_names.get(i));
 					oq= _context.reduceProcessXADDLeaf(node_id_list.get(i), _context.new DeltaFunctionSubstitution(cvar_names.get(i), oq), true);
 					oq = _context.makeCanonical(oq);
+					regressedObservation[cc++] = oq;
 				}
 			}
-		
 		//substitute and regress each alpha vector
 			for (int i=0;i<_previousgammaSet_h.size();i++)
 			{
@@ -334,6 +312,75 @@ public class ContComputeGamma {
 		}
 		
 		//4- compute probability of each case partition of max
+		partition = new ObsPartition();
+		partitionNo =0;
+		reduceProbability(max,a,belief);
+	}
+	private int reduceProbability(int node_id,COAction a,int b) {
+		Integer ret = null;
+		XADDNode n = _context._hmInt2Node.get(node_id);
+		if (n == null) 
+		{
+			System.out.println("ERROR: " + node_id + " expected in node cache, but not found!");
+			new Exception().printStackTrace();
+			System.exit(1);
+		}
+
+		// A terminal node should be reduced (and cannot be restricted)
+		if (n instanceof XADDTNode)
+		{
+			//compute probability 
+			int check =0;
+			int cc=0;
+			Iterator i1 = a._hmObs2DD.entrySet().iterator();
+			while (i1.hasNext()) 
+			{
+				Map.Entry pair1 = (Map.Entry)i1.next();
+				//check = _context.apply((Integer) pair1.getValue(), b, _context.PROD);
+				check = _context.apply(regressedObservation[cc], b, _context.PROD);
+				cc++;
+			}
+			for (int i=0;i<_pomdp._alContSVars.size();i++)
+				check = _context.computeDefiniteIntegral(check, _pomdp._alContSVars.get(i));
+			check = _context.reduceLP(check, _pomdp._alContAllVars);
+			//multiply indicator
+			
+			for (Map.Entry<Decision, Boolean> me : partition.get_decisions().entrySet()) 
+			{
+				double high_val = me.getValue() ? 1d : 0d;
+				double low_val = me.getValue() ? 0d : 1d;
+				check = _context.apply(check,_context.getVarNode(me.getKey(), low_val, high_val), _context.PROD);
+			}
+			for (int i=0;i<_pomdp._alContOVars.size();i++)
+				check = _context.computeDefiniteIntegral(check, _pomdp._alContOVars.get(i));
+			check = _context.reduceLP(check, _pomdp._alContAllVars);
+			XADDTNode t = (XADDTNode) _context.getNode(check);
+			partition.setProbability(((DoubleExpr) t._expr)._dConstVal);
+			if (partition.getProbability()>0 && partition.getProbability()<1)
+			{
+				ObsPartition obsP = new ObsPartition(partition.probability,partition.decisions);
+				_obspartitionset.put(partitionNo, obsP);
+				partitionNo++;
+			}
+			//partition = new ObsPartition();
+			
+			return node_id; 
+		}
+
+
+		XADDINode inode = (XADDINode) n;
+		Decision d = _context._alOrder.get(inode._var);
+		partition.decisions.put(d, false);
+		int low = reduceProbability(inode._low,a,b);
+		partition.decisions.remove(d);
+		partition.decisions.put(d, true);
+		int high = reduceProbability(inode._high,a,b);
+		partition.decisions.remove(d);
+
+		// For now we'll only do linearization of quadratic decisions
+		ret = _context.getINode(inode._var, low, high);
+		return ret;
+		
 	}
 
 }
