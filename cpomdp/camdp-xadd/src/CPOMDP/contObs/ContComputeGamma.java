@@ -158,15 +158,19 @@ public class ContComputeGamma {
 		}
 		int crossSum[] = new int[(int) Math.pow(newalphas.size(), _obspartitionset.size())];
 		//now we need the cross-sum based on different configurations of the observation (alpha1,alpha1,alpha1... alpha2,alpha2,alpha2)
-		int counter=0;
-		for (int j1=0;j1<newalphas.size();j1++)
+		//int counter=0;
+		/*for (int j1=0;j1<newalphas.size();j1++)
 			for (int j2=0;j2<newalphas.size();j2++)
 				for (int j3=0;j3<newalphas.size();j3++)
 					{
 						crossSum[counter] = _context.apply(regressedAlpha[0][j1],(_context.apply(regressedAlpha[1][j2], regressedAlpha[2][j3], _context.SUM)),_context.SUM);
 						counter++;
-					}
-		
+					}*/
+		//TODO:permutation of o's where each element has alpha choices 
+		ArrayList<String> zeros  =  new ArrayList<String> (Arrays.asList("[0]"));  
+		for (int j=0;j<crossSum.length;j++)		
+			crossSum[j] = _context.buildCanonicalXADD(zeros);
+		crossSum = crossSum(regressedAlpha, 0, crossSum, 0);
 		for (int j=0;j<crossSum.length;j++)		
 			crossSum[j] = _context.apply(a._reward, _context.scalarOp(crossSum[j], _pomdp._bdDiscount.doubleValue(), XADD.PROD), XADD.SUM);	
 
@@ -180,6 +184,35 @@ public class ContComputeGamma {
 		
 		return crossSum;
 	}
+	
+	
+	public  int[] crossSum(int  regressedAlpha[][], int  curIdx, int  cs[], int  csSize)
+	{
+		if  (curIdx == regressedAlpha.length)
+			return  cs;
+		if  (curIdx == 0)
+		{ //first array: we only add its values to the cs  array.
+			for  (int  i = 0 ; i < regressedAlpha.length  ; i++)
+				cs[i] = _context.apply(regressedAlpha[i][curIdx],cs[i],_context.SUM);
+			cs = crossSum(regressedAlpha, curIdx + 1, cs, regressedAlpha[curIdx].length);
+		} 
+		else  
+		{
+			int  temp[] = new  int[csSize * regressedAlpha[curIdx].length];
+			int  counter = 0;
+			for  (int  i = 0; i < regressedAlpha[curIdx].length; i++){
+				for  (int  j=0; i < csSize; j++){
+						temp[counter++] = regressedAlpha[i][curIdx] * cs[j];
+				}
+			}
+			for  (int  i = 0; i < temp.length  ; i++)
+				cs[i] =_context.apply(temp[i],cs[i],_context.SUM);
+			cs = crossSum(regressedAlpha, curIdx + 1, cs, temp.length);
+		}
+		return  cs;
+	}
+		
+	
 	
 	private void generateRelObs(COAction a, HashMap<Integer, Integer> _previousgammaSet_h, int belief) 
 	{
@@ -382,5 +415,7 @@ public class ContComputeGamma {
 		return ret;
 		
 	}
+	
+	
 
 }
