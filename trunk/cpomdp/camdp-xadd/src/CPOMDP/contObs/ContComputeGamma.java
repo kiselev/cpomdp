@@ -156,17 +156,36 @@ public class ContComputeGamma {
 				regressedAlpha[i][j] = _context.reduceLP(regressedAlpha[i][j] , _pomdp._alContSVars);
 			}
 		}
-		int crossSum[] = new int[(int) Math.pow(newalphas.size(), _obspartitionset.size())];
+		int crossSum1[] = new int[(int) Math.pow(newalphas.size(), _obspartitionset.size())];
 		//now we need the cross-sum based on different configurations of the observation (alpha1,alpha1,alpha1... alpha2,alpha2,alpha2)
-		//int counter=0;
-		/*for (int j1=0;j1<newalphas.size();j1++)
+		int counter=0;
+		for (int j1=0;j1<newalphas.size();j1++)
 			for (int j2=0;j2<newalphas.size();j2++)
 				for (int j3=0;j3<newalphas.size();j3++)
 					{
-						crossSum[counter] = _context.apply(regressedAlpha[0][j1],(_context.apply(regressedAlpha[1][j2], regressedAlpha[2][j3], _context.SUM)),_context.SUM);
+						crossSum1[counter] = _context.apply(regressedAlpha[0][j1],(_context.apply(regressedAlpha[1][j2], regressedAlpha[2][j3], _context.SUM)),_context.SUM);
 						counter++;
-					}*/
+					}
 		//TODO:permutation of o's where each element has alpha choices 
+		int crossSum[] = new int[(int) Math.pow(newalphas.size(), _obspartitionset.size())];
+		//now we need the cross-sum based on different configurations of the observation (alpha1,alpha1,alpha1... alpha2,alpha2,alpha2)
+		for (int i=0;i<_obspartitionset.size();i++)
+		{
+			int q = (int) Math.pow(newalphas.size(), _obspartitionset.size()-i-1);
+			for (int j=0;j<newalphas.size();j++)
+				for (int p=0;p<(crossSum.length / (newalphas.size())*q);p++)
+				{
+					int sum =0;
+					for (int k=((p*newalphas.size()+j)*q);k<((p*newalphas.size()+j+1)*q);k++)
+					{
+						sum = _context.apply(regressedAlpha[i][j],sum,_context.SUM);
+						crossSum[k] = sum;
+					}
+
+				}
+			
+		}
+		
 		ArrayList<String> zeros  =  new ArrayList<String> (Arrays.asList("[0]"));  
 		for (int j=0;j<crossSum.length;j++)		
 			crossSum[j] = _context.buildCanonicalXADD(zeros);
