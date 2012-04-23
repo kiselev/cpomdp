@@ -121,7 +121,7 @@ public class ContParsePOMDP {
 			ArrayList<String> temp=null;
 			
 			//for more than one continuous parameter for each action
-			boolean checkNoparam = false;
+			/*boolean checkNoparam = false;
 			for (int k=0;k<CVars.size();k++)
 			{
 				while (!(o.equals(CVars.get(k)+"'")))
@@ -132,7 +132,7 @@ public class ContParsePOMDP {
 							break;
 						}
 				if (checkNoparam) break;
-			}
+			}*/
 			HashMap<String,ArrayList> cpt_map = new HashMap<String,ArrayList>();
 			HashMap<String,ArrayList> cpt_obs = new HashMap<String,ArrayList>();
 			
