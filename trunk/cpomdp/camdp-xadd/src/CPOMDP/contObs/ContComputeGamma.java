@@ -78,14 +78,14 @@ public class ContComputeGamma {
 		{
 			// for each of the alpha-vectors in the previous gammaset:regress alpha's first
 			XADDNode n = _context.getNode(j.getValue());			
-			
+
 			HashSet<String> state_vars_in_vfun  = n.collectVars();
 			_pomdp._logStream.println("** Regressing " + a._sName + "\n- State vars in vfun: " + state_vars_in_vfun);
-			
+
 			// prime
 			int q = _context.substitute(j.getValue(), _pomdp._hmPrimeSubs); 
 			_pomdp._logStream.println("- Primed value function:\n" + _context.getString(q));
-			
+
 			// Regress continuous variables first in order given in 
 			for (String var : state_vars_in_vfun) {
 				if (!_pomdp._hsContSVars.contains(var))
@@ -105,29 +105,29 @@ public class ContComputeGamma {
 					q = result;
 					continue;
 				}
-				
+
 				// Perform regression via delta function substitution
 				q = _context.reduceProcessXADDLeaf(dd_conditional_sub, 
 						_context.new DeltaFunctionSubstitution(var_prime, q), true);
-				
+
 				// Cache result
 				_pomdp._logStream.println("-->: " + _context.getString(q));
 				_pomdp._hmContRegrCache.put(new IntTriple(_contRegrKey), q);
 			}
-			
+
 			// Regress boolean variables second
 			for (String var : state_vars_in_vfun) {
 				if (!_pomdp._hsBoolSVars.contains(var))
 					continue; // Continuous variables already regressed, skip
-			
+
 				// Get cpf for boolean var'
 				String var_prime = var + "'";
 				int var_id = _context.getVarIndex( _context.new BoolDec(var_prime), false);
 				Integer dd_cpf = a._hmVar2DD.get(var_prime);
-				
+
 				_pomdp._logStream.println("- Summing out: " + var_prime + "/" + var_id + " in\n" + _context.getString(dd_cpf));
 				q = _context.apply(q, dd_cpf, XADD.PROD);
-				
+
 				// Following is a safer way to marginalize (instead of using opOut
 				// based on apply) in the event that two branches of a boolean variable 
 				// had equal probability and were collapsed.
@@ -135,19 +135,19 @@ public class ContComputeGamma {
 				int restrict_low  = _context.opOut(q, var_id, XADD.RESTRICT_LOW);
 				q = _context.apply(restrict_high, restrict_low, XADD.SUM);
 			}
-			
+
 			//finished regress, for each G_{a,j}^h add to the cross-sum result
 			newalphas.put(newalphas.size(), q);
-			
+
 		}
 		//now we have the regressed alpha's and the probability of each observation partition. 
 		//for each observation, multipy in the alphas
 		//the state in the observation set are not in form of XADD, so need to convert them
-		
+
 		int[][] regressedAlpha = new int[_obspartitionset.size()][newalphas.size()];
 		for (int i = 0;i< _obspartitionset.size();i++)
 		{
-		
+
 			double d = _obspartitionset.get(i).getProbability();
 			int dd = _context.getTermNode(ArithExpr.parse(Double.toString(d)));
 			for (int j=0;j<newalphas.size();j++)
@@ -156,7 +156,7 @@ public class ContComputeGamma {
 				regressedAlpha[i][j] = _context.reduceLP(regressedAlpha[i][j] , _pomdp._alContSVars);
 			}
 		}
-		int crossSum1[] = new int[(int) Math.pow(newalphas.size(), _obspartitionset.size())];
+		/*int crossSum1[] = new int[(int) Math.pow(newalphas.size(), _obspartitionset.size())];
 		//now we need the cross-sum based on different configurations of the observation (alpha1,alpha1,alpha1... alpha2,alpha2,alpha2)
 		int counter=0;
 		for (int j1=0;j1<newalphas.size();j1++)
@@ -166,10 +166,12 @@ public class ContComputeGamma {
 						crossSum1[counter] = _context.apply(regressedAlpha[0][j1], regressedAlpha[1][j2],_context.SUM);
 						crossSum1[counter] = _context.apply(regressedAlpha[2][j3], crossSum1[counter],_context.SUM);
 						counter++;
-					}
+					}*/
 		//TODO:permutation of o's where each element has alpha choices 
 		int crossSum[] = new int[(int) Math.pow(newalphas.size(), _obspartitionset.size())];
 		//now we need the cross-sum based on different configurations of the observation (alpha1,alpha1,alpha1... alpha2,alpha2,alpha2)
+		for (int k=0;k<crossSum.length;k++)
+			crossSum[k] = _context.getTermNode(_context.ZERO);
 		for (int i=0;i<_obspartitionset.size();i++)
 		{
 			int q = (int) Math.pow(newalphas.size(), _obspartitionset.size()-i-1);
@@ -189,26 +191,26 @@ public class ContComputeGamma {
 					}
 
 				}
-			
+
 		}
 		/*for (int k=0;k<crossSum.length;k++)
 			crossSum[k] = _context.reduceLP(crossSum[k], _pomdp._alContAllVars);*/
-		
+
 		for (int j=0;j<crossSum.length;j++)		
 			crossSum[j] = _context.apply(a._reward, _context.scalarOp(crossSum[j], _pomdp._bdDiscount.doubleValue(), XADD.PROD), XADD.SUM);	
 
-    	/*// Ensure Q-function is properly constrained and minimal (e.g., subject to constraints)
+		/*// Ensure Q-function is properly constrained and minimal (e.g., subject to constraints)
 		for (Integer constraint : _pomdp._alConstraints)
 			crossSum = _context.apply(crossSum, constraint, XADD.PROD);
 		if (_pomdp._alConstraints.size() > 0)
 			crossSum = _context.reduceLP(crossSum,_pomdp._alContAllVars);
-		*/
-		
-		
+		 */
+
+
 		return crossSum;
 	}
-	
-	
+
+
 	/*public  int[] crossSum(int  regressedAlpha[][], int  curIdx, int  cs[], int  csSize)
 	{
 		if  (curIdx == regressedAlpha.length)
@@ -234,9 +236,9 @@ public class ContComputeGamma {
 		}
 		return  cs;
 	}*/
-		
-	
-	
+
+
+
 	private void generateRelObs(COAction a, HashMap<Integer, Integer> _previousgammaSet_h, int belief) 
 	{
 		//returns P(each observation partition|b)
@@ -252,8 +254,8 @@ public class ContComputeGamma {
 			check = _context.computeDefiniteIntegral(check, _pomdp._alContSVars.get(i));
 		for (int i=0;i<_pomdp._alContOVars.size();i++)
 			check = _context.computeDefiniteIntegral(check, _pomdp._alContOVars.get(i));*/
-		
-			
+
+
 		//1 - for each alpha-vector: first integrate out s'
 		HashMap<Integer, Integer> newAlphas = new HashMap<Integer, Integer>();
 		ArrayList<XADD.XADDNode> node_list = new ArrayList<XADD.XADDNode>();
@@ -265,43 +267,50 @@ public class ContComputeGamma {
 		ArrayList<Integer> node_id_list = new ArrayList<Integer>();
 
 		//substitute and regress observation model, for each variable there is a different set of alpha vectors
-		 Iterator it = a._hmObs2DD.entrySet().iterator();
-		 int cc =0;
+		Iterator it = a._hmObs2DD.entrySet().iterator();
+		int cc =0;
 		while (it.hasNext()) 
 		{
 			Map.Entry pairs = (Map.Entry)it.next();
+			String obsString = (String) pairs.getKey();
 			XADD.XADDNode n = _context.getNode((Integer) pairs.getValue());
 			HashSet<String> vars = n.collectVars();
 			int oq=0;
-			//for each continuous state variable
+			//for each continuous state variable, only consider the relevent state variable ((fo -> f) not p)
 			Iterator cs = _pomdp._hmPrimeSubs.entrySet().iterator();
 			while (cs.hasNext()) 
 			{
 				Map.Entry pair2 = (Map.Entry)cs.next();
-				oq = _context.substitute((Integer) pairs.getValue(), _pomdp._hmPrimeSubs); 
-				temp_node_list = new ArrayList<XADD.XADDNode>();
-				temp_subst = new ArrayList<ArithExpr>();
-				temp_cvar_names = new ArrayList<String>();
-				temp_node_list.add(null);
-				temp_subst.add(null);
-				temp_cvar_names.add(null);
-				Integer dd = a._hmVar2DD.get(pair2.getValue().toString());
-				node_id_list.add(dd);
-				cvar_names.add(pair2.getValue().toString());
-				node_list.add(_context.getNode(dd)); //node_list has all XADDs from action a that are related with valueDD variables
-				subst.add(null);
-				for (int i = 0; i < node_list.size(); i++) 
+				if (obsString.equals((String)pair2.getKey() + "o"))
 				{
+					oq = _context.substitute((Integer) pairs.getValue(), _pomdp._hmPrimeSubs); 
+					node_list = new ArrayList<XADD.XADDNode>();
+					cvar_names = new ArrayList<String>();
+					node_id_list = new ArrayList<Integer>();
+					temp_node_list = new ArrayList<XADD.XADDNode>();
+					temp_subst = new ArrayList<ArithExpr>();
+					temp_cvar_names = new ArrayList<String>();
+					temp_node_list.add(null);
+					temp_subst.add(null);
+					temp_cvar_names.add(null);
+					Integer dd = a._hmVar2DD.get(pair2.getValue().toString());
+					node_id_list.add(dd);
+					cvar_names.add(pair2.getValue().toString());
+					node_list.add(_context.getNode(dd)); //node_list has all XADDs from action a that are related with valueDD variables
+					subst.add(null);
+					for (int i = 0; i < node_list.size(); i++) 
+					{
 
-					temp_node_list.set(0, node_list.get(i));
-					temp_subst.set(0, subst.get(i)); // This is null, right?
-					temp_cvar_names.set(0, cvar_names.get(i));
-					oq= _context.reduceProcessXADDLeaf(node_id_list.get(i), _context.new DeltaFunctionSubstitution(cvar_names.get(i), oq), true);
-					oq = _context.makeCanonical(oq);
-					regressedObservation[cc++] = oq;
+						temp_node_list.set(0, node_list.get(i));
+						temp_subst.set(0, subst.get(i)); // This is null, right?
+						temp_cvar_names.set(0, cvar_names.get(i));
+						oq= _context.reduceProcessXADDLeaf(node_id_list.get(i), _context.new DeltaFunctionSubstitution(cvar_names.get(i), oq), true);
+						oq = _context.makeCanonical(oq);
+						regressedObservation[cc++] = oq;
+					}
 				}
 			}
-		//substitute and regress each alpha vector
+			//substitute and regress each alpha vector
 			for (int i=0;i<_previousgammaSet_h.size();i++)
 			{
 				//substitute and regress alpha vector
@@ -336,13 +345,16 @@ public class ContComputeGamma {
 						q = _context.makeCanonical(q);
 					}
 				}		
-			//multiply observation model and alpha vector: 
-			q = _context.apply(q, oq, _context.PROD);
-			newAlphas.put(newAlphas.size(), q);
+				//multiply observation model and alpha vector: 
+				q = _context.apply(q, oq, _context.PROD);
+				boolean alreadyInAlpha = false;
+				for (int k=0;k<newAlphas.size();k++)
+					if (newAlphas.get(k).equals(q)) alreadyInAlpha = true;
+				if (!alreadyInAlpha) newAlphas.put(newAlphas.size(), q);
 			}
 			//for all alphas, for all observation variables
 		}
-		
+
 		//2- for this belief, integrate out s for all newalpha's
 		for (int i=0;i< newAlphas.size();i++)
 		{
@@ -360,13 +372,17 @@ public class ContComputeGamma {
 		// 3- take maximum over delta functions which are stored in newalphas
 		int counter =0;
 		int max = 0;
-		while (counter<newAlphas.size())
+		while (counter<newAlphas.size()/2)
 		{
 			if (max!=0) max = _context.apply(newAlphas.get(counter), max, _context.MAX);
 			max = _context.apply(newAlphas.get(counter), newAlphas.get(counter+1), _context.MAX);
 			counter+=2;
 		}
-		
+		// if it did not have at least 2 alphas: 
+		if (max==0)
+		{
+			max = newAlphas.get(0);
+		}
 		//4- compute probability of each case partition of max
 		partition = new ObsPartition();
 		partitionNo =0;
@@ -400,7 +416,7 @@ public class ContComputeGamma {
 				check = _context.computeDefiniteIntegral(check, _pomdp._alContSVars.get(i));
 			check = _context.reduceLP(check, _pomdp._alContAllVars);
 			//multiply indicator
-			
+
 			for (Map.Entry<Decision, Boolean> me : partition.get_decisions().entrySet()) 
 			{
 				double high_val = me.getValue() ? 1d : 0d;
@@ -419,7 +435,7 @@ public class ContComputeGamma {
 				partitionNo++;
 			}
 			//partition = new ObsPartition();
-			
+
 			return node_id; 
 		}
 
@@ -436,9 +452,9 @@ public class ContComputeGamma {
 		// For now we'll only do linearization of quadratic decisions
 		ret = _context.getINode(inode._var, low, high);
 		return ret;
-		
+
 	}
-	
-	
+
+
 
 }
