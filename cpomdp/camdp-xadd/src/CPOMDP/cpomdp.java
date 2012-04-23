@@ -172,7 +172,9 @@ public class cpomdp {
 		//////////////////////////////////////////////////////////////////////////
 		
 		// Initialize value function to zero
-		_currentgammaSet_h.put(0,_context.getTermNode(XADD.NEG_ONE));
+		//_currentgammaSet_h.put(0,_context.getTermNode(XADD.NEG_ONE));
+		//for 2D
+		_currentgammaSet_h.put(0,_context.getTermNode(XADD.ZERO));
 		_valueDD = _context.getTermNode(XADD.ZERO);
 		// Perform value iteration for specified number of iterations, or until convergence detected
 		while (_nCurIter < max_iter) 
@@ -194,7 +196,7 @@ public class cpomdp {
 
 				//counter++;
 				//a test alpha in the set
-				ArrayList l0 =new ArrayList();
+				/*ArrayList l0 =new ArrayList();
 				l0.add("[-10 + t*1 >=0]");
 				ArrayList l0t = new ArrayList();
 				ArrayList l0f = new ArrayList();
@@ -203,7 +205,7 @@ public class cpomdp {
 				l0.add(l0t);
 				l0.add(l0f);
 				int alpha = _context.buildCanonicalXADD(l0);
-				_previousgammaSet_h.put(1, alpha);
+				_previousgammaSet_h.put(1, alpha);*/
 
 				//
 				int[] regr = _gammaHelper.computeGamma(me.getValue(),_previousgammaSet_h);
@@ -213,7 +215,7 @@ public class cpomdp {
 				for (int j=0;j<regr.length;j++)
 				{
 					_currentgammaSet_h.put(counter++, regr[j]);
-					doDisplay(regr[j], ": alpha_vector"+(j+1)+"for action: "+ me.getValue()._sName);
+					//doDisplay(regr[j], ": alpha_vector"+(j+1)+"for action: "+ me.getValue()._sName);
 				}
 				
 				flushCaches();
@@ -223,7 +225,7 @@ public class cpomdp {
 			_currentgammaSet_h = dominanceTest(_currentgammaSet_h);
 			for (int j=0;j<_currentgammaSet_h.size();j++)
 			{
-				doDisplay(_currentgammaSet_h.get(j), "Dominated alpha_vector"+(j+1));
+				//doDisplay(_currentgammaSet_h.get(j), "Dominated alpha_vector"+(j+1));
 			}
 			//TODO: taking a max to display the value function????
 			//_logStream.println("- V^" + _nCurIter + _context.getString(_valueDD));
