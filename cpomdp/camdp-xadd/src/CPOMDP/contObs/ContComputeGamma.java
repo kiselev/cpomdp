@@ -163,7 +163,8 @@ public class ContComputeGamma {
 			for (int j2=0;j2<newalphas.size();j2++)
 				for (int j3=0;j3<newalphas.size();j3++)
 					{
-						crossSum1[counter] = _context.apply(regressedAlpha[0][j1],(_context.apply(regressedAlpha[1][j2], regressedAlpha[2][j3], _context.SUM)),_context.SUM);
+						crossSum1[counter] = _context.apply(regressedAlpha[0][j1], regressedAlpha[1][j2],_context.SUM);
+						crossSum1[counter] = _context.apply(regressedAlpha[2][j3], crossSum1[counter],_context.SUM);
 						counter++;
 					}
 		//TODO:permutation of o's where each element has alpha choices 
@@ -173,23 +174,26 @@ public class ContComputeGamma {
 		{
 			int q = (int) Math.pow(newalphas.size(), _obspartitionset.size()-i-1);
 			for (int j=0;j<newalphas.size();j++)
-				for (int p=0;p<(crossSum.length / (newalphas.size())*q);p++)
+				for (int p=0;p<(crossSum.length / (newalphas.size()*q));p++)
 				{
-					int sum =0;
+					//int sum =_context.getTermNode(_context.ZERO);;
 					for (int k=((p*newalphas.size()+j)*q);k<((p*newalphas.size()+j+1)*q);k++)
 					{
-						sum = _context.apply(regressedAlpha[i][j],sum,_context.SUM);
-						crossSum[k] = sum;
+						if (crossSum[k]==0)
+						{
+							crossSum[k] = regressedAlpha[i][j];
+							//crossSum[k] = sum;
+						}
+						else 
+							crossSum[k] = _context.apply(regressedAlpha[i][j],crossSum[k],_context.SUM);
 					}
 
 				}
 			
 		}
+		/*for (int k=0;k<crossSum.length;k++)
+			crossSum[k] = _context.reduceLP(crossSum[k], _pomdp._alContAllVars);*/
 		
-		ArrayList<String> zeros  =  new ArrayList<String> (Arrays.asList("[0]"));  
-		for (int j=0;j<crossSum.length;j++)		
-			crossSum[j] = _context.buildCanonicalXADD(zeros);
-		crossSum = crossSum(regressedAlpha, 0, crossSum, 0);
 		for (int j=0;j<crossSum.length;j++)		
 			crossSum[j] = _context.apply(a._reward, _context.scalarOp(crossSum[j], _pomdp._bdDiscount.doubleValue(), XADD.PROD), XADD.SUM);	
 
@@ -205,7 +209,7 @@ public class ContComputeGamma {
 	}
 	
 	
-	public  int[] crossSum(int  regressedAlpha[][], int  curIdx, int  cs[], int  csSize)
+	/*public  int[] crossSum(int  regressedAlpha[][], int  curIdx, int  cs[], int  csSize)
 	{
 		if  (curIdx == regressedAlpha.length)
 			return  cs;
@@ -229,7 +233,7 @@ public class ContComputeGamma {
 			cs = crossSum(regressedAlpha, curIdx + 1, cs, temp.length);
 		}
 		return  cs;
-	}
+	}*/
 		
 	
 	
