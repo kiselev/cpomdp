@@ -49,13 +49,39 @@ public class ContComputeGamma {
 		_pomdp = pomdp;
 		//1 belief for now: 
 		ArrayList l0 =new ArrayList();
-		l0.add("[-6 + t*1 <= 0]");
+		/*l0.add("[-6 + t*1 <= 0]");
 		ArrayList l0t = new ArrayList();
 		ArrayList l0f = new ArrayList();
 		l0t.add("[-2 + t*1 >= 0]");
 		ArrayList l0tt = new ArrayList();
 		ArrayList l0tf = new ArrayList();
 		l0tt.add("0.25");
+		l0tf.add("0");
+		l0t.add(l0tt);
+		l0t.add(l0tf);
+		l0f.add("0");
+		l0.add(l0t);
+		l0.add(l0f);*/
+		//for 2d:
+		l0.add("[-180 + p*1 <= 0]");
+		ArrayList l0t = new ArrayList();
+		ArrayList l0f = new ArrayList();
+		l0t.add("[-160 + p*1 >= 0]");
+		ArrayList l0tt = new ArrayList();
+		ArrayList l0tf = new ArrayList();
+		l0tt.add("[-800 + f*1 <= 0]");
+		ArrayList l0ttt = new ArrayList();
+		ArrayList l0ttf = new ArrayList();
+		l0ttt.add("[-550 + f*1 >= 0]");
+		ArrayList l0tttt = new ArrayList();
+		ArrayList l0tttf = new ArrayList();
+		l0tttt.add("0.0002");
+		l0tttf.add("0");
+		l0ttt.add(l0tttt);
+		l0ttt.add(l0tttf);
+		l0ttf.add("0");
+		l0tt.add(l0ttt);
+		l0tt.add(l0ttf);
 		l0tf.add("0");
 		l0t.add(l0tt);
 		l0t.add(l0tf);
@@ -181,7 +207,7 @@ public class ContComputeGamma {
 					//int sum =_context.getTermNode(_context.ZERO);;
 					for (int k=((p*newalphas.size()+j)*q);k<((p*newalphas.size()+j+1)*q);k++)
 					{
-						if (crossSum[k]==0)
+						if (crossSum[k]==_context.getTermNode(_context.ZERO))
 						{
 							crossSum[k] = regressedAlpha[i][j];
 							//crossSum[k] = sum;
@@ -316,7 +342,7 @@ public class ContComputeGamma {
 				//substitute and regress alpha vector
 				n = _context.getNode(_previousgammaSet_h.get(i));
 				vars = n.collectVars();
-				int q=0;
+				int q= _context.substitute(_previousgammaSet_h.get(i), _pomdp._hmPrimeSubs); 
 				cs =_pomdp._hmPrimeSubs.entrySet().iterator();
 				while (cs.hasNext()) 
 				{
@@ -324,7 +350,8 @@ public class ContComputeGamma {
 					node_id_list = new ArrayList<Integer>();
 					node_list = new ArrayList<XADD.XADDNode>();
 					cvar_names = new ArrayList<String>();
-					q = _context.substitute(_previousgammaSet_h.get(i), _pomdp._hmPrimeSubs); 
+					/*if (q>0) q = _context.substitute(q, _pomdp._hmPrimeSubs); 
+					else q = _context.substitute(_previousgammaSet_h.get(i), _pomdp._hmPrimeSubs); */
 					temp_node_list = new ArrayList<XADD.XADDNode>();
 					temp_subst = new ArrayList<ArithExpr>();
 					temp_cvar_names = new ArrayList<String>();
@@ -355,15 +382,19 @@ public class ContComputeGamma {
 			//for all alphas, for all observation variables
 		}
 
-		//2- for this belief, integrate out s for all newalpha's
+		//2- for this belief, integrate out all continuous states for all newalpha's
 		for (int i=0;i< newAlphas.size();i++)
 		{
-			int beforeInt , afterInt = 0;
+			int afterInt = 0;
+			int beforeInt = _context.apply(newAlphas.get(i), belief, _context.PROD);
 			for (int j=0;j<_pomdp._alContSVars.size();j++)
 			{
-				if (afterInt>0) beforeInt = _context.apply(afterInt, belief, _context.PROD);
-				beforeInt = _context.apply(newAlphas.get(i), belief, _context.PROD);
-				afterInt =_context.computeDefiniteIntegral(beforeInt,_pomdp._alContSVars.get(j));
+				/*if (afterInt>0) 
+					beforeInt = _context.apply(afterInt, belief, _context.PROD);
+				else beforeInt = _context.apply(newAlphas.get(i), belief, _context.PROD);*/
+				if (afterInt>0) 
+					afterInt =_context.computeDefiniteIntegral(afterInt,_pomdp._alContSVars.get(j));
+				else afterInt =_context.computeDefiniteIntegral(beforeInt,_pomdp._alContSVars.get(j));
 				afterInt = _context.reduceLP(afterInt, _pomdp._alContAllVars);
 				//or assign a new array for delta's but no need to keep them
 			}
@@ -375,7 +406,7 @@ public class ContComputeGamma {
 		while (counter<newAlphas.size()/2)
 		{
 			if (max!=0) max = _context.apply(newAlphas.get(counter), max, _context.MAX);
-			max = _context.apply(newAlphas.get(counter), newAlphas.get(counter+1), _context.MAX);
+			else max = _context.apply(newAlphas.get(counter), newAlphas.get(counter+1), _context.MAX);
 			counter+=2;
 		}
 		// if it did not have at least 2 alphas: 
@@ -411,31 +442,33 @@ public class ContComputeGamma {
 				//check = _context.apply((Integer) pair1.getValue(), b, _context.PROD);
 				check = _context.apply(regressedObservation[cc], b, _context.PROD);
 				cc++;
-			}
-			for (int i=0;i<_pomdp._alContSVars.size();i++)
-				check = _context.computeDefiniteIntegral(check, _pomdp._alContSVars.get(i));
-			check = _context.reduceLP(check, _pomdp._alContAllVars);
-			//multiply indicator
 
-			for (Map.Entry<Decision, Boolean> me : partition.get_decisions().entrySet()) 
-			{
-				double high_val = me.getValue() ? 1d : 0d;
-				double low_val = me.getValue() ? 0d : 1d;
-				check = _context.apply(check,_context.getVarNode(me.getKey(), low_val, high_val), _context.PROD);
-			}
-			for (int i=0;i<_pomdp._alContOVars.size();i++)
-				check = _context.computeDefiniteIntegral(check, _pomdp._alContOVars.get(i));
-			check = _context.reduceLP(check, _pomdp._alContAllVars);
-			XADDTNode t = (XADDTNode) _context.getNode(check);
-			partition.setProbability(((DoubleExpr) t._expr)._dConstVal);
-			if (partition.getProbability()>0 && partition.getProbability()<1)
-			{
-				ObsPartition obsP = new ObsPartition(partition.probability,partition.decisions);
-				_obspartitionset.put(partitionNo, obsP);
-				partitionNo++;
-			}
-			//partition = new ObsPartition();
+				for (int i=0;i<_pomdp._alContSVars.size();i++)
+					check = _context.computeDefiniteIntegral(check, _pomdp._alContSVars.get(i));
+				check = _context.reduceLP(check, _pomdp._alContAllVars);
+				//multiply indicator
 
+				for (Map.Entry<Decision, Boolean> me : partition.get_decisions().entrySet()) 
+				{
+					double high_val = me.getValue() ? 1d : 0d;
+					double low_val = me.getValue() ? 0d : 1d;
+					check = _context.apply(check,_context.getVarNode(me.getKey(), low_val, high_val), _context.PROD);
+				}
+				//integrate only this observation
+				check = _context.computeDefiniteIntegral(check,(String)pair1.getKey());
+				//for (int i=0;i<_pomdp._alContOVars.size();i++)
+				//check = _context.computeDefiniteIntegral(check, _pomdp._alContOVars.get(i));
+				check = _context.reduceLP(check, _pomdp._alContAllVars);
+				XADDTNode t = (XADDTNode) _context.getNode(check);
+				partition.setProbability(((DoubleExpr) t._expr)._dConstVal);
+				if (partition.getProbability()>0 && partition.getProbability()<1)
+				{
+					ObsPartition obsP = new ObsPartition(partition.probability,partition.decisions);
+					_obspartitionset.put(partitionNo, obsP);
+					partitionNo++;
+				}
+				//partition = new ObsPartition();
+			}
 			return node_id; 
 		}
 
