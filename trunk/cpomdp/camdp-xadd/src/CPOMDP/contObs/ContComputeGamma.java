@@ -42,63 +42,19 @@ public class ContComputeGamma {
 	int partitionNo =0;
 	int[] regressedObservation;
 	HashMap<Integer, Integer> newalphas = new HashMap<Integer, Integer>();
-	int[] belief = new int[1];
 	public ContComputeGamma(XADD xadd,cpomdp pomdp)
 	{
 		_context = xadd;
 		_pomdp = pomdp;
-		//1 belief for now: 
-		ArrayList l0 =new ArrayList();
-		/*l0.add("[-6 + t*1 <= 0]");
-		ArrayList l0t = new ArrayList();
-		ArrayList l0f = new ArrayList();
-		l0t.add("[-2 + t*1 >= 0]");
-		ArrayList l0tt = new ArrayList();
-		ArrayList l0tf = new ArrayList();
-		l0tt.add("0.25");
-		l0tf.add("0");
-		l0t.add(l0tt);
-		l0t.add(l0tf);
-		l0f.add("0");
-		l0.add(l0t);
-		l0.add(l0f);*/
-		//for 2d:
-		l0.add("[-180 + p*1 <= 0]");
-		ArrayList l0t = new ArrayList();
-		ArrayList l0f = new ArrayList();
-		l0t.add("[-160 + p*1 >= 0]");
-		ArrayList l0tt = new ArrayList();
-		ArrayList l0tf = new ArrayList();
-		l0tt.add("[-800 + f*1 <= 0]");
-		ArrayList l0ttt = new ArrayList();
-		ArrayList l0ttf = new ArrayList();
-		l0ttt.add("[-550 + f*1 >= 0]");
-		ArrayList l0tttt = new ArrayList();
-		ArrayList l0tttf = new ArrayList();
-		l0tttt.add("0.0002");
-		l0tttf.add("0");
-		l0ttt.add(l0tttt);
-		l0ttt.add(l0tttf);
-		l0ttf.add("0");
-		l0tt.add(l0ttt);
-		l0tt.add(l0ttf);
-		l0tf.add("0");
-		l0t.add(l0tt);
-		l0t.add(l0tf);
-		l0f.add("0");
-		l0.add(l0t);
-		l0.add(l0f);
-		int b0 = _context.buildCanonicalXADD(l0);
-		belief[0] = b0;
+		
 	}
-	public int[] computeGamma(COAction a, HashMap<Integer, Integer> _previousgammaSet_h) {
+	public int[] computeGamma(COAction a, HashMap<Integer, Integer> _previousgammaSet_h, int belief) {
 
 		//first generate relevant observation partitions
 		_obspartitionset= new HashMap<Integer,ObsPartition>();
 		regressedObservation = new int[a._hmObs2DD.size()];
 		newalphas = new HashMap<Integer, Integer>();
-		for (int i=0;i<belief.length;i++)
-			generateRelObs(a,_previousgammaSet_h,belief[i]);
+		generateRelObs(a,_previousgammaSet_h, belief);
 		//_pomdp._obspartitions.putAll(_obspartitionset);
 		for (Map.Entry<Integer,Integer> j : _previousgammaSet_h.entrySet())
 		{
@@ -175,6 +131,7 @@ public class ContComputeGamma {
 		{
 
 			double d = _obspartitionset.get(i).getProbability();
+			if (d< 0.00000001) d = 0.0;
 			int dd = _context.getTermNode(ArithExpr.parse(Double.toString(d)));
 			for (int j=0;j<newalphas.size();j++)
 			{
@@ -455,9 +412,10 @@ public class ContComputeGamma {
 					check = _context.apply(check,_context.getVarNode(me.getKey(), low_val, high_val), _context.PROD);
 				}
 				//integrate only this observation
-				check = _context.computeDefiniteIntegral(check,(String)pair1.getKey());
-				//for (int i=0;i<_pomdp._alContOVars.size();i++)
-				//check = _context.computeDefiniteIntegral(check, _pomdp._alContOVars.get(i));
+				//check = _context.computeDefiniteIntegral(check,(String)pair1.getKey());
+				for (int i=0;i<_pomdp._alContOVars.size();i++)
+				check = _context.computeDefiniteIntegral(check, _pomdp._alContOVars.get(i));
+				System.out.println("AFTER INTEGRATION CHECK: "+ check);
 				check = _context.reduceLP(check, _pomdp._alContAllVars);
 				XADDTNode t = (XADDTNode) _context.getNode(check);
 				partition.setProbability(((DoubleExpr) t._expr)._dConstVal);
