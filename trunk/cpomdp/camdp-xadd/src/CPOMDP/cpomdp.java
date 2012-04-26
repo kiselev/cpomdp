@@ -27,6 +27,8 @@ import util.IntTriple;
 import xadd.TestXADDDist;
 import xadd.XADD;
 import xadd.XADD.ArithExpr;
+import xadd.XADD.DoubleExpr;
+import xadd.XADD.XADDTNode;
 
 public class cpomdp {
 
@@ -85,6 +87,8 @@ public class cpomdp {
 	public HashMap<Integer,Integer> _currentgammaSet_h;
 	public HashMap<Integer,Integer> _previousgammaSet_h;
 	public HashMap<Integer,PartitionObsState> _obspartitions= new HashMap<Integer,PartitionObsState>();
+	int[] belief = new int[2];
+	int[] beliefBasedVectors = new int[2];
 	public cpomdp(String filename) {
 		this(filename, HierarchicalParser.ParseFile(filename));
 	}
@@ -170,7 +174,80 @@ public class cpomdp {
 		int[] num_nodes = new int[max_iter + 1]; 
 		int[] num_branches = new int[max_iter + 1]; 
 		//////////////////////////////////////////////////////////////////////////
+		//define belief: 
+		//1 belief for now: 
+				ArrayList l0 =new ArrayList();
+				l0.add("[-6 + t*1 <= 0]");
+				ArrayList l0t = new ArrayList();
+				ArrayList l0f = new ArrayList();
+				l0t.add("[-2 + t*1 >= 0]");
+				ArrayList l0tt = new ArrayList();
+				ArrayList l0tf = new ArrayList();
+				l0tt.add("0.25");
+				l0tf.add("0");
+				l0t.add(l0tt);
+				l0t.add(l0tf);
+				l0f.add("0");
+				l0.add(l0t);
+				l0.add(l0f);
+				
+				ArrayList l1 =new ArrayList();
+				l1.add("[-13 + t*1 <= 0]");
+				ArrayList l1t = new ArrayList();
+				ArrayList l1f = new ArrayList();
+				l1t.add("[-8 + t*1 >= 0]");
+				ArrayList l1tt = new ArrayList();
+				ArrayList l1tf = new ArrayList();
+				l1tt.add("0.2");
+				l1tf.add("0");
+				l1t.add(l0tt);
+				l1t.add(l0tf);
+				l1f.add("0");
+				l1.add(l1t);
+				l1.add(l1f);
+				
+				
+				//for 2d:
+				/*l0.add("[-180 + p*1 <= 0]");
+				ArrayList l0t = new ArrayList();
+				ArrayList l0f = new ArrayList();
+				l0t.add("[-160 + p*1 >= 0]");
+				ArrayList l0tt = new ArrayList();
+				ArrayList l0tf = new ArrayList();
+				l0tt.add("[-800 + f*1 <= 0]");
+				ArrayList l0ttt = new ArrayList();
+				ArrayList l0ttf = new ArrayList();
+				l0ttt.add("[-550 + f*1 >= 0]");
+				ArrayList l0tttt = new ArrayList();
+				ArrayList l0tttf = new ArrayList();
+				l0tttt.add("0.0002");
+				l0tttf.add("0");
+				l0ttt.add(l0tttt);
+				l0ttt.add(l0tttf);
+				l0ttf.add("0");
+				l0tt.add(l0ttt);
+				l0tt.add(l0ttf);
+				l0tf.add("0");
+				l0t.add(l0tt);
+				l0t.add(l0tf);
+				l0f.add("0");
+				l0.add(l0t);
+				l0.add(l0f);*/
+				int b0 = _context.buildCanonicalXADD(l0);
+				belief[0] = b0;
+				int b1 = _context.buildCanonicalXADD(l1);
+				belief[1] = b1;
 		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		///////////////////////////////////////////////////////////////////////
 		// Initialize value function to zero
 		//_currentgammaSet_h.put(0,_context.getTermNode(XADD.NEG_ONE));
 		//for 2D
@@ -189,45 +266,85 @@ public class cpomdp {
 			_previousgammaSet_h = _currentgammaSet_h;
 			_currentgammaSet_h = new HashMap<Integer, Integer>();
 
-			int counter=0;
-			// Iterate over each action
-			_maxDD = null;
-			for (Map.Entry<String,COAction> me : _hmName2Action.entrySet()) {
-
-				//counter++;
-				//a test alpha in the set
-				/*ArrayList l0 =new ArrayList();
-				l0.add("[-10 + t*1 >=0]");
-				ArrayList l0t = new ArrayList();
-				ArrayList l0f = new ArrayList();
-				l0t.add("-1000");
-				l0f.add("100");
-				l0.add(l0t);
-				l0.add(l0f);
-				int alpha = _context.buildCanonicalXADD(l0);
-				_previousgammaSet_h.put(1, alpha);*/
-
-				//
-				int[] regr = _gammaHelper.computeGamma(me.getValue(),_previousgammaSet_h);
-				//the result is Gamma^h_a, add this to the current set of Gamma^h_a
-				//regr = _context.reduceLinearize(regr);
-				//regr = _context.reduceLP(regr,_alContAllVars);
-				for (int j=0;j<regr.length;j++)
-				{
-					_currentgammaSet_h.put(counter++, regr[j]);
-					//doDisplay(regr[j], ": alpha_vector"+(j+1)+"for action: "+ me.getValue()._sName);
-				}
-				
-				flushCaches();
-			}
-
-			//pruning the _alpha vectors
-			_currentgammaSet_h = dominanceTest(_currentgammaSet_h);
-			for (int j=0;j<_currentgammaSet_h.size();j++)
+			
+			//for every belief find the maximum alpha  vector
+			for (int i=0;i<belief.length;i++)
 			{
-				//doDisplay(_currentgammaSet_h.get(j), "Dominated alpha_vector"+(j+1));
+				// Iterate over each action
+				int counter=0;
+				_maxDD = null;
+				for (Map.Entry<String,COAction> me : _hmName2Action.entrySet()) 
+				{
+
+					//counter++;
+					//a test alpha in the set
+					/*ArrayList l0 =new ArrayList();
+					l0.add("[-10 + t*1 >=0]");
+					ArrayList l0t = new ArrayList();
+					ArrayList l0f = new ArrayList();
+					l0t.add("-1000");
+					l0f.add("100");
+					l0.add(l0t);
+					l0.add(l0f);
+					int alpha = _context.buildCanonicalXADD(l0);
+					_previousgammaSet_h.put(1, alpha);*/
+					
+					int[] regr = _gammaHelper.computeGamma(me.getValue(),_previousgammaSet_h,belief[i]);
+					//the result is Gamma^h_a, add this to the current set of Gamma^h_a
+					
+					for (int j=0;j<regr.length;j++)
+					{
+						_currentgammaSet_h.put(counter++, regr[j]);
+						//doDisplay(regr[j], ": alpha_vector"+(j+1)+"for action: "+ me.getValue()._sName);
+					}
+				
+					//flushCaches();
+				}
+
+				//pruning the _alpha vectors
+				_currentgammaSet_h = dominanceTest(_currentgammaSet_h);
+				
+				
+				//now for this belief, compute the alpha vector that will result in the maximum value
+				int alphaValue[] = new int[_currentgammaSet_h.size()];
+				double maximumAlpha = 0;
+				int maximumVector = 0;
+				for (int j=0;j<_currentgammaSet_h.size();j++)
+				{
+					if (_currentgammaSet_h.get(j)!=null)
+					{
+						int previousS = 0;
+						for (int k=0;k<_alContSVars.size();k++)
+						{
+							if (previousS>0)
+								alphaValue[j] = _context.computeDefiniteIntegral(previousS,_alContSVars.get(k));
+							else alphaValue[j] = _context.computeDefiniteIntegral(_context.apply(_currentgammaSet_h.get(j), belief[i], _context.PROD),_alContSVars.get(k));
+							previousS = alphaValue[j];
+							XADDTNode t = (XADDTNode) _context.getNode(alphaValue[j]);
+							if (j==0)
+							{
+								maximumAlpha = ((DoubleExpr) t._expr)._dConstVal;
+								maximumVector = _currentgammaSet_h.get(j);
+							}
+							else if ((((DoubleExpr) t._expr)._dConstVal) > maximumAlpha) 
+							{
+								maximumAlpha = ((DoubleExpr) t._expr)._dConstVal;
+								maximumVector = _currentgammaSet_h.get(j);
+							}
+						}
+					}
+				}
+				//now found the maximum alpha-vector, remove all other vectors and put this vector in the currentAlpha-set
+				_currentgammaSet_h.clear();
+				beliefBasedVectors[i] =  maximumVector;
+					
 			}
-			//TODO: taking a max to display the value function????
+			_currentgammaSet_h.clear();
+			for (int j=0;j<beliefBasedVectors.length;j++)
+			{
+				_currentgammaSet_h.put(j, beliefBasedVectors[j]);
+				doDisplay(_currentgammaSet_h.get(j), "Iteration:" + _nCurIter+"Alpha_vector for belief"+(j+1));
+			}
 			//_logStream.println("- V^" + _nCurIter + _context.getString(_valueDD));
 			//doDisplay(_valueDD, _logFileRoot + ": V^"+_nCurIter);
 			
@@ -267,14 +384,14 @@ public class cpomdp {
 		{
 			for (int j=0;j<_currentgammaSet_h2.size();j++)
 			{
-				if (i!=j)
+				if ((i!=j)&&(_currentgammaSet_h2.get(i)!=null)&&(_currentgammaSet_h2.get(j)!=null))
 				{
 					int result = _context.apply(_currentgammaSet_h2.get(i), _currentgammaSet_h2.get(j), _context.MAX);
-					result = _context.reduceLP(result,_alContSVars );
+					//result = _context.reduceLP(result,_alContSVars );
 					if (result == _currentgammaSet_h2.get(i))
-						_currentgammaSet_h2.put(i, 0);
+						_currentgammaSet_h2.remove(j);
 					else if (result == _currentgammaSet_h2.get(j))
-						_currentgammaSet_h2.put(j, 0);
+						_currentgammaSet_h2.remove(i);
 				}
 			}
 		}
@@ -324,6 +441,8 @@ public class cpomdp {
 		if (_valueDD!=null){
 			_context.addSpecialNode(_valueDD); 
 		}
+		for (int i=0;i<belief.length;i++)
+			_context.addSpecialNode(belief[i]);
 		_context.flushCaches();
 
 		_logStream.println("After flush: " + _context._hmInt2Node.size() + " XADD nodes in use, " + "freeMemory: " + 
