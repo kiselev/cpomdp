@@ -1,33 +1,35 @@
-cvariables (p f)
+cvariables (p t)
 min-values (0 0)
-max-values (150 2000)
+max-values (100 100)
 bvariables ()
-ovariables(po fo)
+ovariables(po to)
 
 action increase
 
-p'  ([p + 12])
-f' ([f+150])
+p'  ([p + 10 > 20]
+		([20])
+		([p+10]))
+t' ([t+10])
 
 observation
-po ([po<p + 20]
-		([po> -20 + p]
-			([0.025]) 
+po ([po < p + 10]
+		([po > p]
+			([0.1]) 
 			([0]))
 		([0])
 	)
 
-fo ([fo<f + 100]
-		([fo> -100 + f]
-			([0.005]) 
+to ([to < t + 105]
+		([to > 80 + t]
+			([0.25]) 
 			([0]))
 		([0])
 	)
 
-reward 	([p <= 186]
-				([p>=170]
-					([f<=1120]
-						([f>=530]
+reward 	([p <= 15]
+				([p>=5]
+					([t<=105]
+						([t>=95]
 							([200])
 							([0]))
 						([0]))
@@ -37,28 +39,29 @@ endaction
 
 action decrease
 
-p' ([p-7])
-f' ([f-100])
+p'  ([-10 + p < 0]
+		([0])
+		([-10+ p]))
+t' ([-5 + t])
 		
 observation
-po ([po<p + 20]
-		([po> -20 + p]
-			([0.025]) 
+po ([po < p + 10]
+		([po > p]
+			([0.1]) 
 			([0]))
 		([0])
 	)
 
-fo ([fo<f + 100]
-		([fo> -100 + f]
-			([0.005]) 
+to ([to < t + 105]
+		([to > 80 + t]
+			([0.25]) 
 			([0]))
 		([0])
 	)
-
-reward 	([p <= 186]
-				([p>=170]
-					([f<=1120]
-						([f>=530]
+reward 	([p <= 15]
+				([p>=5]
+					([t<=105]
+						([t>=95]
 							([100])
 							([0]))
 						([0]))
