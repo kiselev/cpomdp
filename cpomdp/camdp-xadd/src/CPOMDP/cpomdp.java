@@ -176,8 +176,8 @@ public class cpomdp {
 		//////////////////////////////////////////////////////////////////////////
 		//define belief: 
 		//1 belief for now: 
-				ArrayList l0 =new ArrayList();
-				l0.add("[-6 + t*1 <= 0]");
+			ArrayList l0 =new ArrayList();
+			/*	l0.add("[-6 + t*1 <= 0]");
 				ArrayList l0t = new ArrayList();
 				ArrayList l0f = new ArrayList();
 				l0t.add("[-2 + t*1 >= 0]");
@@ -204,23 +204,24 @@ public class cpomdp {
 				l1t.add(l0tf);
 				l1f.add("0");
 				l1.add(l1t);
-				l1.add(l1f);
+				l1.add(l1f);*/
 				
 				
 				//for 2d:
-				/*l0.add("[-180 + p*1 <= 0]");
+				ArrayList l1 =new ArrayList();
+				l0.add("[-100 + p*1 <= 0]");
 				ArrayList l0t = new ArrayList();
 				ArrayList l0f = new ArrayList();
-				l0t.add("[-160 + p*1 >= 0]");
+				l0t.add("[-90 + p*1 >= 0]");
 				ArrayList l0tt = new ArrayList();
 				ArrayList l0tf = new ArrayList();
-				l0tt.add("[-800 + f*1 <= 0]");
+				l0tt.add("[-10 + t*1 <= 0]");
 				ArrayList l0ttt = new ArrayList();
 				ArrayList l0ttf = new ArrayList();
-				l0ttt.add("[-550 + f*1 >= 0]");
+				l0ttt.add("[ t*1 >= 0]");
 				ArrayList l0tttt = new ArrayList();
 				ArrayList l0tttf = new ArrayList();
-				l0tttt.add("0.0002");
+				l0tttt.add("0.05");
 				l0tttf.add("0");
 				l0ttt.add(l0tttt);
 				l0ttt.add(l0tttf);
@@ -232,19 +233,38 @@ public class cpomdp {
 				l0t.add(l0tf);
 				l0f.add("0");
 				l0.add(l0t);
-				l0.add(l0f);*/
+				l0.add(l0f);
+				
+				l1.add("[-130 + p*1 <= 0]");
+				ArrayList l1t = new ArrayList();
+				ArrayList l1f = new ArrayList();
+				l1t.add("[-90 + p*1 >= 0]");
+				ArrayList l1tt = new ArrayList();
+				ArrayList l1tf = new ArrayList();
+				l1tt.add("[-30 + t*1 <= 0]");
+				ArrayList l1ttt = new ArrayList();
+				ArrayList l1ttf = new ArrayList();
+				l1ttt.add("[-10 + t*1 >= 0]");
+				ArrayList l1tttt = new ArrayList();
+				ArrayList l1tttf = new ArrayList();
+				l1tttt.add("0.00125");
+				l1tttf.add("0");
+				l1ttt.add(l1tttt);
+				l1ttt.add(l1tttf);
+				l1ttf.add("0");
+				l1tt.add(l1ttt);
+				l1tt.add(l1ttf);
+				l1tf.add("0");
+				l1t.add(l1tt);
+				l1t.add(l1tf);
+				l1f.add("0");
+				l1.add(l1t);
+				l1.add(l1f);
+				
 				int b0 = _context.buildCanonicalXADD(l0);
 				belief[0] = b0;
 				int b1 = _context.buildCanonicalXADD(l1);
 				belief[1] = b1;
-		
-		
-		
-		
-		
-		
-		
-		
 		
 		
 		///////////////////////////////////////////////////////////////////////
@@ -320,6 +340,7 @@ public class cpomdp {
 								alphaValue[j] = _context.computeDefiniteIntegral(previousS,_alContSVars.get(k));
 							else alphaValue[j] = _context.computeDefiniteIntegral(_context.apply(_currentgammaSet_h.get(j), belief[i], _context.PROD),_alContSVars.get(k));
 							previousS = alphaValue[j];
+						}
 							XADDTNode t = (XADDTNode) _context.getNode(alphaValue[j]);
 							if (j==0)
 							{
@@ -333,7 +354,7 @@ public class cpomdp {
 							}
 						}
 					}
-				}
+				
 				//now found the maximum alpha-vector, remove all other vectors and put this vector in the currentAlpha-set
 				_currentgammaSet_h.clear();
 				beliefBasedVectors[i] =  maximumVector;
