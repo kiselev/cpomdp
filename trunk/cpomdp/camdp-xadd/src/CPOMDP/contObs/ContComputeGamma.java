@@ -258,7 +258,7 @@ public class ContComputeGamma {
 			String obsString = (String) pairs.getKey();
 			XADD.XADDNode n = _context.getNode((Integer) pairs.getValue());
 			HashSet<String> vars = n.collectVars();
-			int oq=0;
+			//int oq=0;
 			//for each continuous state variable, only consider the relevent state variable ((fo -> f) not p)
 			Iterator cs = _pomdp._hmPrimeSubs.entrySet().iterator();
 			while (cs.hasNext()) 
@@ -266,6 +266,7 @@ public class ContComputeGamma {
 				Map.Entry pair2 = (Map.Entry)cs.next();
 				if (obsString.equals((String)pair2.getKey() + "o"))
 				{
+					int oq=0;
 					oq = _context.substitute((Integer) pairs.getValue(), _pomdp._hmPrimeSubs); 
 					node_list = new ArrayList<XADD.XADDNode>();
 					cvar_names = new ArrayList<String>();
@@ -293,14 +294,15 @@ public class ContComputeGamma {
 					}
 				}
 			}
+		}
 			//substitute and regress each alpha vector
-			for (int i=0;i<_previousgammaSet_h.size();i++)
-			{
+		for (int i=0;i<_previousgammaSet_h.size();i++)
+		{
 				//substitute and regress alpha vector
-				n = _context.getNode(_previousgammaSet_h.get(i));
-				vars = n.collectVars();
+				XADD.XADDNode n = _context.getNode(_previousgammaSet_h.get(i));
+				HashSet<String> vars = n.collectVars();
 				int q= _context.substitute(_previousgammaSet_h.get(i), _pomdp._hmPrimeSubs); 
-				cs =_pomdp._hmPrimeSubs.entrySet().iterator();
+				Iterator cs =_pomdp._hmPrimeSubs.entrySet().iterator();
 				while (cs.hasNext()) 
 				{
 					Map.Entry pair2 = (Map.Entry)cs.next();
@@ -330,14 +332,17 @@ public class ContComputeGamma {
 					}
 				}		
 				//multiply observation model and alpha vector: 
-				q = _context.apply(q, oq, _context.PROD);
+				int oq = regressedObservation[0];
+				for (int j=1;j<regressedObservation.length;j++)
+					oq = _context.apply(oq, regressedObservation[j], _context.PROD);
+				q = _context.apply(q,oq, _context.PROD);
 				boolean alreadyInAlpha = false;
 				for (int k=0;k<newAlphas.size();k++)
 					if (newAlphas.get(k).equals(q)) alreadyInAlpha = true;
 				if (!alreadyInAlpha) newAlphas.put(newAlphas.size(), q);
 			}
 			//for all alphas, for all observation variables
-		}
+		
 
 		//2- for this belief, integrate out all continuous states for all newalpha's
 		for (int i=0;i< newAlphas.size();i++)
@@ -391,15 +396,18 @@ public class ContComputeGamma {
 		{
 			//compute probability 
 			int check =0;
-			int cc=0;
-			Iterator i1 = a._hmObs2DD.entrySet().iterator();
-			while (i1.hasNext()) 
-			{
-				Map.Entry pair1 = (Map.Entry)i1.next();
+			//int cc=0;
+			//Iterator i1 = a._hmObs2DD.entrySet().iterator();
+			//while (i1.hasNext()) 
+			//{
+				//Map.Entry pair1 = (Map.Entry)i1.next();
 				//check = _context.apply((Integer) pair1.getValue(), b, _context.PROD);
-				check = _context.apply(regressedObservation[cc], b, _context.PROD);
-				cc++;
-
+				int oq = regressedObservation[0];
+				for (int cc=1;cc<regressedObservation.length;cc++)
+					oq = _context.apply(regressedObservation[cc], oq, _context.PROD);
+				check = _context.apply(oq, b, _context.PROD);
+				//cc++;
+			//}
 				for (int i=0;i<_pomdp._alContSVars.size();i++)
 					check = _context.computeDefiniteIntegral(check, _pomdp._alContSVars.get(i));
 				check = _context.reduceLP(check, _pomdp._alContAllVars);
@@ -426,7 +434,7 @@ public class ContComputeGamma {
 					partitionNo++;
 				}
 				//partition = new ObsPartition();
-			}
+			//}
 			return node_id; 
 		}
 
