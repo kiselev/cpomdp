@@ -1,0 +1,69 @@
+cvariables (p t)
+min-values (0 0)
+max-values (100 100)
+bvariables ()
+ovariables(po to)
+
+action increase
+
+p'  ([p + 10 > 20]
+		([20])
+		([p+10]))
+t' ([t+10])
+
+observation
+po ([po < p + 10]
+		([po > p]
+			([0.1]) 
+			([0]))
+		([0])
+	)
+
+to ([to < t + 105]
+		([to > 80 + t]
+			([0.25]) 
+			([0]))
+		([0])
+	)
+
+reward 	([p <= 15]
+				([p>=5]
+					([t<=105]
+						([t>=95]
+							([50])
+							([-1]))
+						([-3]))
+					([-3]))
+				([-5]))     					
+endaction
+
+action decrease
+
+p'  ([-10 + p < 0]
+		([0])
+		([-10+ p]))
+t' ([-5 + t])
+		
+observation
+po ([po < p + 10]
+		([po > p]
+			([0.1]) 
+			([0]))
+		([0])
+	)
+
+to ([to < t + 105]
+		([to > 80 + t]
+			([0.25]) 
+			([0]))
+		([0])
+	)
+reward 	([-1])
+					
+      					
+
+endaction
+
+discount 1.000000
+iterations 12
+
