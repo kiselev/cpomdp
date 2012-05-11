@@ -209,16 +209,16 @@ public class cpomdp {
 				
 				//for 2d:
 				ArrayList l1 =new ArrayList();
-				l0.add("[-100 + p*1 <= 0]");
+				l0.add("[-10 + p*1 <= 0]");
 				ArrayList l0t = new ArrayList();
 				ArrayList l0f = new ArrayList();
-				l0t.add("[-90 + p*1 >= 0]");
+				l0t.add("[p*1 >= 0]");
 				ArrayList l0tt = new ArrayList();
 				ArrayList l0tf = new ArrayList();
-				l0tt.add("[-10 + t*1 <= 0]");
+				l0tt.add("[-100 + t*1 <= 0]");
 				ArrayList l0ttt = new ArrayList();
 				ArrayList l0ttf = new ArrayList();
-				l0ttt.add("[ t*1 >= 0]");
+				l0ttt.add("[ -90 + t*1 >= 0]");
 				ArrayList l0tttt = new ArrayList();
 				ArrayList l0tttf = new ArrayList();
 				l0tttt.add("0.05");
@@ -235,16 +235,16 @@ public class cpomdp {
 				l0.add(l0t);
 				l0.add(l0f);
 				
-				l1.add("[-130 + p*1 <= 0]");
+				l1.add("[-30 + p*1 <= 0]");
 				ArrayList l1t = new ArrayList();
 				ArrayList l1f = new ArrayList();
-				l1t.add("[-90 + p*1 >= 0]");
+				l1t.add("[-10 + p*1 >= 0]");
 				ArrayList l1tt = new ArrayList();
 				ArrayList l1tf = new ArrayList();
-				l1tt.add("[-30 + t*1 <= 0]");
+				l1tt.add("[-130 + t*1 <= 0]");
 				ArrayList l1ttt = new ArrayList();
 				ArrayList l1ttf = new ArrayList();
-				l1ttt.add("[-10 + t*1 >= 0]");
+				l1ttt.add("[-90 + t*1 >= 0]");
 				ArrayList l1tttt = new ArrayList();
 				ArrayList l1tttf = new ArrayList();
 				l1tttt.add("0.00125");
