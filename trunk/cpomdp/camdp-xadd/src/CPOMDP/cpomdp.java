@@ -221,7 +221,7 @@ public class cpomdp {
 				l0ttt.add("[ -90 + t*1 >= 0]");
 				ArrayList l0tttt = new ArrayList();
 				ArrayList l0tttf = new ArrayList();
-				l0tttt.add("0.05");
+				l0tttt.add("0.01");
 				l0tttf.add("0");
 				l0ttt.add(l0tttt);
 				l0ttt.add(l0tttf);
