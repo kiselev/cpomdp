@@ -55,6 +55,12 @@ public class ContComputeGamma {
 		regressedObservation = new int[a._hmObs2DD.size()];
 		newalphas = new HashMap<Integer, Integer>();
 		generateRelObs(a,_previousgammaSet_h, belief);
+		//test partitions add to 1
+		double add= 0;
+		for (int i=0;i<_obspartitionset.size();i++)
+		{
+			add += ( (ObsPartition)_obspartitionset.get(i)).probability;
+		}
 		//_pomdp._obspartitions.putAll(_obspartitionset);
 		for (Map.Entry<Integer,Integer> j : _previousgammaSet_h.entrySet())
 		{
@@ -379,6 +385,7 @@ public class ContComputeGamma {
 		//4- compute probability of each case partition of max
 		partition = new ObsPartition();
 		partitionNo =0;
+		max = _context.reduceLP(max, _pomdp._alContAllVars);
 		reduceProbability(max,a,belief);
 	}
 	private int reduceProbability(int node_id,COAction a,int b) {
