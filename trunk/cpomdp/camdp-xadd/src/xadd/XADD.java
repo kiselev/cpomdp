@@ -1423,6 +1423,8 @@ public class XADD {
 		return n.collectVars();
 	}
 
+
+	
 	// This internal class is intended to be used to specify inline operations
 	// to perform at the
 	// leaves of an XADD... the operation returns a new XADD for the leaf.
@@ -2750,15 +2752,20 @@ public class XADD {
 					System.exit(1);
 				}
 			}
-
+			ArithExpr coeff ;
 			// Check for proper form
 			if (integration_var_count > 0) {
-				if (integration_var_count > 1 || factors.size() > 0) {
-					System.out
-							.println("removeIntegrationVarTerm: integration var '"
-									+ _integrationVar
-									+ "' must appear linearly in constraint '"
-									+ expr + "'");
+				if ( factors.size() > 0) {
+					System.out.println("removeIntegrationVarTerm: integration var '"+ _integrationVar+ "' must appear linearly in constraint '"	+ expr + "'");
+					//System.exit(1);
+					coeff = ArithExpr.op(factors.get(0), coef, PROD);
+					for (int i = 1; i < factors.size(); i++)
+						coeff = ArithExpr.op(factors.get(i), coeff, PROD);
+					return coeff;
+				}
+				if (integration_var_count > 1)
+				{
+					System.out.println("removeIntegrationVarTerm: integration var '"+ _integrationVar+ "' must appear linearly in constraint '"	+ expr + "'");
 					System.exit(1);
 				}
 				// If get here only coef*_integrationVar
