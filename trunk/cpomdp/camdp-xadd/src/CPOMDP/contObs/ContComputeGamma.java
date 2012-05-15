@@ -1,5 +1,8 @@
 package CPOMDP.contObs;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -37,6 +40,9 @@ public class ContComputeGamma {
 	XADD _context = null;
 	cpomdp _pomdp = null;
 	private IntTriple _contRegrKey = new IntTriple(-1,-1,-1);
+	public String _logFileRoot;
+	public static PrintStream _logStream = null;
+
 	HashMap<Integer,ObsPartition> _obspartitionset= new HashMap<Integer,ObsPartition>();
 	ObsPartition partition = new ObsPartition();
 	int partitionNo =0;
@@ -46,6 +52,14 @@ public class ContComputeGamma {
 	{
 		_context = xadd;
 		_pomdp = pomdp;
+		_logFileRoot = _pomdp.InsertDirectory("src/CPOMDP/contObs/obsPartitions", _pomdp.RESULTS_DIR).replace("-", "_");
+		try {
+			_logStream = new PrintStream(new FileOutputStream(_logFileRoot + ".log"));
+		} catch (FileNotFoundException e) {
+			System.err.println(e);
+			e.printStackTrace();
+			System.exit(1);
+		}
 		
 	}
 	public int[] computeGamma(COAction a, HashMap<Integer, Integer> _previousgammaSet_h, int belief) {
@@ -131,13 +145,31 @@ public class ContComputeGamma {
 		//now we have the regressed alpha's and the probability of each observation partition. 
 		//for each observation, multipy in the alphas
 		//the state in the observation set are not in form of XADD, so need to convert them
-
-		int[][] regressedAlpha = new int[_obspartitionset.size()][newalphas.size()];
+		HashMap<Integer,ObsPartition> _newobspartitionset= new HashMap<Integer,ObsPartition>();
+		int counter=0;
 		for (int i = 0;i< _obspartitionset.size();i++)
 		{
-
+			
 			double d = _obspartitionset.get(i).getProbability();
-			if (d< 0.00000001) d = 0.0;
+			if (d< 0.05) 
+			{
+				d = 0.0;
+				//_obspartitionset.remove(i);
+			}
+			else 
+				{
+					_newobspartitionset.put(counter, _obspartitionset.get(i));
+					counter++;
+				}
+		}
+		_logStream.println(" Number of observation partitions for belief  " + belief + " is: "+ _newobspartitionset.size());
+		_logStream.println("Probabilities: ");
+		int[][] regressedAlpha = new int[_newobspartitionset.size()][newalphas.size()];
+		for (int i = 0;i< _newobspartitionset.size();i++)
+		{
+
+			double d = _newobspartitionset.get(i).getProbability();
+			_logStream.print(d+ " ");
 			int dd = _context.getTermNode(ArithExpr.parse(Double.toString(d)));
 			for (int j=0;j<newalphas.size();j++)
 			{
@@ -157,13 +189,13 @@ public class ContComputeGamma {
 						counter++;
 					}*/
 		//TODO:permutation of o's where each element has alpha choices 
-		int crossSum[] = new int[(int) Math.pow(newalphas.size(), _obspartitionset.size())];
+		int crossSum[] = new int[(int) Math.pow(newalphas.size(), _newobspartitionset.size())];
 		//now we need the cross-sum based on different configurations of the observation (alpha1,alpha1,alpha1... alpha2,alpha2,alpha2)
 		for (int k=0;k<crossSum.length;k++)
 			crossSum[k] = _context.getTermNode(_context.ZERO);
-		for (int i=0;i<_obspartitionset.size();i++)
+		for (int i=0;i<_newobspartitionset.size();i++)
 		{
-			int q = (int) Math.pow(newalphas.size(), _obspartitionset.size()-i-1);
+			int q = (int) Math.pow(newalphas.size(), _newobspartitionset.size()-i-1);
 			for (int j=0;j<newalphas.size();j++)
 				for (int p=0;p<(crossSum.length / (newalphas.size()*q));p++)
 				{
