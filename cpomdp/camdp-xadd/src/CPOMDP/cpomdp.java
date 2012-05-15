@@ -3,10 +3,13 @@ package CPOMDP;
 import graph.Graph;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
@@ -46,14 +49,14 @@ public class cpomdp {
 	/* For printing */
 	public static DecimalFormat _df = new DecimalFormat("#.###");
 	public static PrintStream _logStream = null;
-
+	public static int filecounter = 0;
 	/* Static variables */
 	public static long _lTime; // For timing purposes
 	public static Runtime RUNTIME = Runtime.getRuntime();
 
 	/* Local vars */
 	public boolean DISPLAY_2D = false;
-	public boolean DISPLAY_3D = false;
+	public boolean DISPLAY_3D = true;
 
 	public String _problemFile = null;
 	public String _logFileRoot = null;
@@ -177,7 +180,7 @@ public class cpomdp {
 		//define belief: 
 		//1 belief for now: 
 			ArrayList l0 =new ArrayList();
-			/*	l0.add("[-6 + t*1 <= 0]");
+				/*l0.add("[-6 + t*1 <= 0]");
 				ArrayList l0t = new ArrayList();
 				ArrayList l0f = new ArrayList();
 				l0t.add("[-2 + t*1 >= 0]");
@@ -322,9 +325,9 @@ public class cpomdp {
 				}
 
 				//pruning the _alpha vectors
-				_currentgammaSet_h = dominanceTest(_currentgammaSet_h);
+			//	_currentgammaSet_h = dominanceTest(_currentgammaSet_h);
 				
-				
+				_logStream.println("Number of Alpha vectors after pruning for belief "+ (i+1) + "is : " + _currentgammaSet_h.size());
 				//now for this belief, compute the alpha vector that will result in the maximum value
 				int alphaValue[] = new int[_currentgammaSet_h.size()];
 				double maximumAlpha = 0;
@@ -365,6 +368,8 @@ public class cpomdp {
 			{
 				_currentgammaSet_h.put(j, beliefBasedVectors[j]);
 				doDisplay(_currentgammaSet_h.get(j), "Iteration:" + _nCurIter+"Alpha_vector for belief"+(j+1));
+				create3DDataFile(_currentgammaSet_h.get(j),"x1","x2"); //for refinement
+
 			}
 			//_logStream.println("- V^" + _nCurIter + _context.getString(_valueDD));
 			//doDisplay(_valueDD, _logFileRoot + ": V^"+_nCurIter);
@@ -524,6 +529,7 @@ public class cpomdp {
 		g.addNodeStyle("_temp_", "filled");
 		g.addNodeColor("_temp_", "gold1");
 		g.launchViewer(1300, 770);
+		//g.genDotFile("V"+iter+".dot");
 	}
 
 	public void display2D(int xadd_id, String label) {
@@ -547,6 +553,11 @@ public class cpomdp {
 
 		// If DISPLAY_3D is enabled, it is expected that necessary parameters 
 		// have been placed in a _problemFile + ".2d"
+		/*TestXADDDist.Plot3DXADD(_context, xadd_id, 
+				70,10,140, 
+				0,5,40, 
+				opt._bassign, opt._dassign, "t", "p", "alpha_values");*/
+		
 		FileOptions opt = new FileOptions(_problemFile + ".3d");
 
 		System.out.println("Plotting 3D...");
@@ -559,6 +570,85 @@ public class cpomdp {
 				opt._varLB.get(0), opt._varInc.get(0), opt._varUB.get(0), 
 				opt._varLB.get(1), opt._varInc.get(1), opt._varUB.get(1), 
 				opt._bassign, opt._dassign, opt._var.get(0), opt._var.get(1), label);
+	}
+	
+	public void create3DDataFile(Integer XDD, String xVar, String yVar) {
+		try {
+     		filecounter++;
+            BufferedWriter out = new BufferedWriter(new FileWriter("plant2d"+filecounter+".txt"));
+            
+            HashMap<String,Boolean> bool_assign = new HashMap<String,Boolean>();
+            	
+            for (String var : _context._hsBooleanVars) {
+       		   bool_assign.put(var, false);	
+       		}
+             //values in order for rover, refinement,inventory
+            Double minX,minY,maxX,maxY;
+            Double size3D = 20.0;
+             minX= 0.0;//_camdp._context._hmMinVal.get(xVar);
+             maxX= 200.0;//_camdp._context._hmMaxVal.get(xVar);
+             minY= 0.0;//_camdp._context._hmMinVal.get(yVar);
+             maxY= 60.0;//_camdp._context._hmMaxVal.get(yVar);
+             
+             Double incX= (maxX-minX)/(size3D-1);
+             Double incY= (maxY-minY)/(size3D-1);
+             
+             
+            ArrayList<Double> X = new ArrayList<Double>();
+            ArrayList<Double> Y = new ArrayList<Double>();
+            
+
+             Double xval=minX;
+             Double yval=minY;
+             for(int i=0;i<size3D;i++)
+             {
+            	 X.add(xval);
+            	 Y.add(yval);
+            	 xval=xval+incX;
+            	 yval=yval+incY;
+             }
+            // System.out.println(">> Evaluations");
+             for(int i=0;i<size3D;i++){
+                 /*out.append(X.get(i).toString()+" ");
+                 out.append(Y.get(i).toString()+" ");*/
+                 for(int j=0;j<size3D;j++){
+                	 
+             
+  		     		HashMap<String,Double> cont_assign = new HashMap<String,Double>();
+  		     		
+  		     		for (Map.Entry<String,Double> me : _context._hmMinVal.entrySet()) {
+  		     			cont_assign.put(me.getKey(),  me.getValue());
+  		     		}
+  		     			     		
+              		cont_assign.put(xVar,  X.get(j));
+              		cont_assign.put(yVar,  Y.get(i));
+              		
+              		Double z=_context.evaluate(XDD, bool_assign, cont_assign);
+              		
+             		out.append(z.toString()+" ");
+                   /*
+             		cont_assign.put(xVar,  200.0d/3.0d);
+              		cont_assign.put(yVar,  100.0d/3.0d);
+              		z=_context.evaluate(XDD, bool_assign, cont_assign);
+             		System.out.println("Eval: [" + bool_assign + "], [" + cont_assign + "]"
+             						   + ": " + z);		
+
+             		out.append(z.toString()+" ");
+              		*/
+              		
+             		
+                 }
+                 out.newLine();
+             }
+            //out.append(System.getProperty("line.separator"));
+             out.close();
+             
+             
+             
+         } catch (IOException e) {
+         	System.out.println("Problem with the creation 3D file");
+         	System.exit(0);
+         }
 	}
 
 	// A helper class to load options for 2D and 3D plotting for specific problems
