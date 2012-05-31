@@ -694,13 +694,35 @@ For the belief $b_1: U[t_s;2,6]$ the two vectors above the resulting $\delta$-fu
 \end{cases}
 \hspace{5mm} 
 \delta_{2}(o) &= \begin{cases}
- (2<t_o<6) &: -15 + 0.025*t_o \\
+ (2<t_o<6) &: -0.15 + 0.025*t_o \\
 (-4<t_o<2) &: -0.1 \\
 (-8<t_o<-4) &: -0.2 - 0.025*t_o 
 \end{cases}
 \nonumber
 \end{align}
 }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure*}[tbp!]
+\vspace{-6mm}
+\centering
+\hspace{-17mm}
+\includegraphics[width=0.41\textwidth]{pics/beliefs.pdf}
+\hspace{-12mm}
+\includegraphics[width=0.42\textwidth]{pics/delta1.pdf}
+\hspace{-12mm}
+\includegraphics[width=0.42\textwidth]{pics/delta2.pdf}
+\hspace{-17mm}
+\vspace{-10mm}
+\caption{\footnotesize 
+{\it (left)} Beliefs $b_1,b_2$ for 1D \texttt{Power Plant} example; 
+{\it (middle)} Observation dependent function for $b_1$ that partition the observation space into 3 regions with different probabilities $P(z_i)$ ; 
+{\it (right)} Relevant observation partitions and their probabilities for $b_2$.
+}
+\label{fig:timeSpace}
+\vspace{-4mm}
+\end{figure*}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 The observation dependent $\delta$-functions divide the observation space into regions which can yield the optimal policy according to the belief state $b_1$. According to continuous observation space defined in \cite{pascalPomdp}, for a 1-dimensional observation space with two or more functions of the observation, we need to find the optimal boundaries or partitions of the space. In this work, numerical solutions are proposed to find the roots of any two observation dependant function. Here we use the symbolic power of the max-operator to find all the maximum boundary regions of two or more $\delta$-functions at the same time. For the two $\delta$-functions above the following partitions of the observation space is derived after taking their maximuum: 
 {\footnotesize
 \begin{align}
