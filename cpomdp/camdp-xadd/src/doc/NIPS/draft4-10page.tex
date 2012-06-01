@@ -45,6 +45,8 @@
 
 \newcommand{\open}{\mathit{open}}
 \newcommand{\close}{\mathit{close}}
+\newcommand{\high}{\mathit{high}}
+\newcommand{\low}{\mathit{low}}
 \newcommand{\fix}{\marginpar{FIX}}
 \newcommand{\new}{\marginpar{NEW}}
 
@@ -76,9 +78,12 @@ relevant observation partitioning for potentially correlated,
 multivariate observation spaces.
 %for domais with piecewise
 %polynomial transition and observation functions.  
-We demonstrate
-proof-of-concept results on uni- and multi-variate state and
-observation steam plant control.
+We demonstrate our algorithm on a power plant
+control problem requiring continuous state 
+\emph{and} observations.
+%empirically evaluate on real-world inspired power 
+%proof-of-concept results on uni- and multi-variate state and
+%observation power plant control.
 \end{abstract}
 
 \section{Introduction} %and Related Work}
@@ -87,7 +92,7 @@ observation steam plant control.
 Partially-observable Markov decision processes (POMDPs) are a powerful
 modeling formalism for real-world sequential decision-making
 problems~\cite{kaebling}.  In recent years, point-based value
-iteration methods~\cite{pbvi_jair06,hsvi2,Perseus} have proved
+iteration methods~\cite{pbvi_jair06,hsvi2,Perseus,gapmin} have proved
 extremely successful at scaling (approximately) optimal POMDP
 solutions to large state spaces when a set of initial belief states is
 known.
@@ -99,8 +104,9 @@ point-based backups for continuous state and discrete observation
 problems (with approximate sample-based extensions to continuous
 actions and observations), while~\cite{pascal_ijcai05} provides exact
 point-based backups for discrete state and continuous observation
-problems (where multivariate observations must be independent).  While
-restricted to discrete state, \cite{pascal_ijcai05} provides an
+problems (where multivariate observations must be conditionally
+independent).  While
+restricted to discrete states, \cite{pascal_ijcai05} provides an
 important insight that we exploit in this work: \emph{only a finite
 number of partitionings of the observation space are required to
 distinguish between the optimal conditional policy over a finite set
@@ -124,10 +130,8 @@ partitions for potentially correlated multivariate continuous
 observation spaces by exploiting the piecewise polynomial integration
 operation of~\cite{sanner_aaai12} and the multivariate symbolic maximization
 technique of~\cite{sanner_uai11}.  
-We demonstrate
-proof-of-concept results on uni- and multi-variate state and
-observation steam plant control showing the tractability of our
-exact symbolic dynamic programming point-based approach.
+We conclude by demonstrating our algorithm on a power plant
+control problem requiring bivariate continuous state and observations.
 
 %\footnote{All code for these
 %experiments is freely available online (link suppressed) and
@@ -173,7 +177,8 @@ P(\vec{d_o},\vec{x_o}|\vec{d_s},\vec{x_s},a) =
 For simplicity of algorithmic exposition, we do not allow synchronic
 arcs in the transition representation, but note that to incorporate
 such arcs only requires restrictions on the variable elimination
-ordering during dynamic programming.  In these Bayes nets, 
+ordering during dynamic programming.  In these transition and
+observation Bayes nets, 
 probabilities over 
 \emph{discrete} variables are represented using conditional probability
 functions (CPF) in the form of
@@ -194,8 +199,10 @@ example to make this DC-POMDP framework more concrete.
 \includegraphics[width=0.45\textwidth]{pics/b1-4.pdf}
 \end{center}
 \vspace{-2mm}
-\caption{\footnotesize Left: Example conditional plan $\beta^h$ for discrete observations. Right: The maximum $\alpha$ vector of iteration 4 for the \textsc{Power Plant}
-as a decision diagram: 
+\caption{\footnotesize (left) Example conditional plan $\beta^h$ for discrete observations; (right) an example piecewise $\alpha$-vector for continuous state $t$ represented
+as a 
+%The maximum $\alpha$ vector for a belief state at iteration 4 for the \textsc{\bf Power Plant} problem in Section~\ref{}
+decision diagram: 
 the \emph{true} branch is solid, the \emph{false}
 branch is dashed.}
 \label{fig:cond_plan}
@@ -209,14 +216,14 @@ branch is dashed.}
 %\end{center}
 %\vspace{-3mm}
 %\caption{%\footnotesize 
-%The optimal value function for \textsc{Power Plant}
+%The optimal value function for \textsc{\bf Power Plant}
 %as a decision diagram: 
 %the \emph{true} branch is solid, the \emph{false}
 %branch is dashed.} 
 %\end{figure}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\textbf{Example} \textsc{(Power Plant)~\cite{steam2}} \emph{The steam
+\textbf{Example} \textsc{\bf (Power Plant)~\cite{steam2}} \emph{The steam
 generation system of a power plant aims to provide hot steam to the
 steam turbine which in turn produces electricity. Feed-water is
 exposed to heat in the tubes leading to the water tank, where water
@@ -227,9 +234,14 @@ Mixing water and steam makes the
 respective pressure and temperature observations $p_o \in \mathbb{R}$
 and $t_o \in \mathbb{R}$ on the underlying state $p_s \in \mathbb{R}$
 and $t_s \in \mathbb{R}$ highly uncertain.  Action choices are either
-to open or close a presure valve $a \in \{ \open, \close \}$.}
+to open or close a pressure valve $a \in \{ \open, \close \}$.}
 
-For the \textsc{Power Plant} example, the transition and reward functions are defined as below:
+We initially present two 
+simple examples labeled \textsc{\bf 1D-Power Plant} 
+using only the temperature state $t_s$.
+First, the transition and reward functions common to both problems
+are defined as below where simply, the temperate increments or
+decrements according to the action:
 % For the transition probability, we use the Dirac function to model the deterministic equations. We can also define stochasticity in the transition model using boolean random variables that are sampled stochastically.  The reward function can be any linear function of the state or action. Going above a threshold temperature (e.g. $T=10$) will cause an explosion in the plant when trying to close the valve which results in the negative reward of $-1000$. Staying below this temperature is safe and will produce electricity an gain the reward of $100$. The reward of an open valve is $-1$.
 {\footnotesize
 \vspace{-1mm}
@@ -252,17 +264,19 @@ R(t_s,a) =
 }
 
 %contribution? 
-This example will try to maximize its reward using observations on the temperature. The observations received before closing the plant to a safe temperature are therefore critical.  For the observation model we begin with a discrete model for the observation $z$ with values $high, low$ such as the following for the $\open$ action:  
+Next we introduce the \textsc{\bf Discrete Obs. 1D-Power Plant} variant using 
+a discrete binary observation space with possible
+observations $o \in mathcal{O} = \{\high,\low\}$:
 {\footnotesize
 \vspace{-1mm}
 \begin{align}
-P(z=high|t_s',\open) = 
+P(o=\high|t_s',\open) = 
 \begin{cases}
   t_s <= 15 &: 0.9 \\
  \neg (t_s <= 15)&: 0.1 \\
 \end{cases}
 \hspace{5mm}
-P(z=low|t_s',\open) = 
+P(o=\low|t_s',\open) = 
 \begin{cases}
  t_s <= 15 &: 0.1 \\
  \neg (t_s <= 15) &: 0.9 \\
@@ -284,7 +298,10 @@ P(z=low|t_s',\open) =
 %\end{cases} \nonumber
 %\end{align}
 
-After defining the solution to the discrete observation with a continuous state DC-POMDP, we can extend this to consider continuous observations using a continuous uniform noise distribution which is more realistic in many domains. %For a certain interval, the probability is a fixed number, while it is zero elsewhere. The integral of the uniform distribution should sum to one. 
+Finally we introduce the \textsc{\bf Cont. Obs. 1D-Power Plant}
+variant with continuous observation $t_o$.  
+We define the observation probability over $t_o$ as uniform on
+an interval 10 units wide, centered at $t_s$.
 {\footnotesize
 \begin{align}
 P(t_o|t_s',\open) = 
@@ -294,22 +311,64 @@ P(t_o|t_s',\open) =
 \end{cases}
 \end{align}
 }
-Next we define the general solution to solving DC-POMDPs. 
-
 
 \section{DC-POMDP solution}
-The DC-POMDP will choose actions in order to compute an optimal plan over time. This plan is the policy $\pi$ of the agent  depending on the history of actions and observations over a Markovian state. In the partially observable case where there is uncertainty on the states, the policy is a function over a continuous set of probability distributions over $|\mathcal{S}|$ known as the belief state $b = P(x_s,d_s)$.
 
-At any of the horizon steps, a DC-POMDP policy $\pi(b)$ is defined as the iterative plan on executing an action and observing all probable outcomes of the set of observations from the $(h-1)$-step. The belief state is updated after this according to the Bayes rule: $\sum_{d_s}\int_{x_s} b(xd_s)\mathcal{T}(xd'_s,xd_s,a)\mathcal{Z}(xd'_s,xd_o,a)$. \footnote{For simiplicity we use ($xd_s = x_s,d_s$) and ($xd_o=x_o,d_o$)}
-The optimal policy is defined over the belief state as the sum of the expected discounted rewards over horizon $h$ starting with belief $b_0$.
-{\footnotesize
+In a DC-POMDP, the agent does not directly observe the states and thus
+must maintain a belief state $b(xd_s) = P(xd_s)$.\footnote{For
+compactness we define $xd_s := (x_s,d_s)$ and $xd_o:=(x_o,d_o)$.}  For a
+given belief state $\vec{b} = b(\cdot)$, a POMDP policy $\pi$ can be
+represented by a tree corresponding to a conditional plan $\beta$.  An
+h-step conditional plan $\beta^h$ can be defined recursively in terms
+of $(h-1)$-step conditional plans as shown in
+Fig.~\ref{fig:cond_plan}.
+
+Our goal is to find a policy $\pi$ that maximizes the value function,
+defined as the sum of expected discounted rewards over horizon $h$
+starting from initial belief state $\vec{b}$:
 \begin{equation}
-V^h_{\Pi^*}(\vec{b}) = E_{\pi^*} \left[ \sum_{h=0}^{H} \gamma^t \cdot r_h \Big| \vec{b}_0 = \vec{b} \right]\nonumber
+V^h_\pi(\vec{b}) = E_{\pi} \left[ \sum\nolimits_{t=0}^{h} \gamma^t \cdot r_t \Big| \vec{b}_0 = \vec{b} \right]
 \end{equation}
+where $r_t$ is the reward obtained at time $t$ and $\vec{b}_0$ is the
+belief state at $t=0$.  For finite $h$ and belief state $\vec{b}$, the
+optimal policy $\pi$ takes the form of an $h$-step conditional plan
+$\beta^h$.  For $h = \infty$, the optimal discounted ($\gamma < 1$)
+value function can be approximated arbitrarily closely by using
+a sufficiently large, but finite $h$~\cite{kaebling}.  
+
+Even when the state is continuous (but the actions and observations
+are discrete), 
+the optimal POMDP value function for finite horizon $h$ is a piecewise linear
+and convex function of the belief state $\vec{b}$~\cite{Perseus_cont} hence 
+$V^h$ is given by a maximum over a finite set of
+``$\alpha$-vectors'' $\alpha^h_i$:
+\begin{equation}
+V^h(\vec{b}) = \max\nolimits_{\alpha^h_i \in \Gamma^h} \alpha^h_i \cdot \vec{b}
+\end{equation}
+Later on when we tackle continuous state \emph{and} observations,
+we note that we will dynamically derive an optimal, 
+finite partitioning of the observation
+space for a given belief state and hence reduce the continuous
+observation problem back to a discrete observation problem at every
+horizon.  
+
+The $\Gamma^h$ in this optimal $h$-stage-to-go value function can be
+computed via Monahan's dynamic programming approach to \emph{value
+iteration} (VI)~\cite{monahan82}.  
+Initializing  $\alpha^0_1 = \vec{0}$ and $\Gamma^0 = \{ \alpha^0_1 \}$, $\Gamma^h$ is obtained from $\Gamma^{h-1}$ using the backup operation defined in (2):\footnote{The $\textrm{\large $\boxplus$}$ of sets is defined as 
+$\textrm{\large $\boxplus$}_{j \in \{ 1,\ldots, n \} } S_j = S_1 \textrm{\large $\boxplus$} \cdots \textrm{\large $\boxplus$} S_n$ where the pairwise cross-sum $P 
+\textrm{\large $\boxplus$} Q = \{ \vec{p} + \vec{q} | \vec{p} \in P, \vec{q} \in Q \}$.}
+{\footnotesize
+\begin{align} 
+g^h_{a,o,j} &=  \int_{x_{s'}} \sum_{d_{s'}} p(o|xd'_s,a)p(xd'_s|xd_s,a) \alpha^h_j(xd'_s) \label{eq:backup} \\
+\Gamma^{h}_a   &= r_a + \gamma \textrm{\large $\boxplus$}_{o \in \mathcal{O}} \left\{ g^h_{a,o,j}(\cdot) \right\}_j ;  \forall \alpha^{h-1}_{j} \in \Gamma^{h-1}  \label{eq:cross_prod} 
+\end{align}
+\begin{align}
+\Gamma^h  &= \bigcup_a \Gamma^h_a 
+\end{align}
 }
-Solving the value function for the optimal policy is performed using Dynamic programming algorithms such as value iteration. 
-%The decision at each time step is to pick an action based on past actions and observations. 
-The possible set of conditional plans $\beta^h$ correspond to a decision tree. Figure 1 left, shows the decision tree for the simple case of three horizons with discrete observations. It represents a conditional plan consisting of an action and two possible observation strategies. For continuous observations, conditional plans are decision trees with infinitely many branches. In our solution we show that instead of a policy tree with infinite branches, we can create partitions based on relevant observation values, resulting in a policy tree similar to that of figure 1.%From here on we assume this finite set of observation partitioning as $\mathcal{O}$.
+where $r_a = r(x_s,d_s,a)$.  
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \incmargin{.5em}
 \linesnumbered
@@ -322,28 +381,32 @@ The possible set of conditional plans $\beta^h$ correspond to a decision tree. F
 \SetKwFunction{remapWithPrimes}{Prime}
 \Begin
 {
-   $V^0:=0, h:=0$\;
+   $V^0:=0, h:=0, \Gamma_{PBVI}^0 = \{ \alpha_1^0 \} $\;
    \While{$h < H$}
    {
-       $h:=h+1, \Gamma_{PBVI}^h :=\emptyset$\;
+       $h:=h+1, \Gamma^h :=\emptyset, \Gamma_{PBVI}^h :=\emptyset$\;
        \ForEach {$b_i \in B$}
        {
        	\ForEach {$a \in A$}
       	 {
 			$\Gamma_{a}^h :=\emptyset$ \;       		
        		\If {$ContObs =true$}
-       			{$(O^h,P(xd_{o_i}|xd_{s_i})) \,:=\,$ \genObs{$\Gamma^{h-1},a,b_i$}\;}
-       		 \ForEach {$xd_{o_i} \in \textsc{O}^{h}$}
+       			{\emph{// Continuous observation so derive observation set $O_i^h$ for belief $b_i$} \;
+			  $(O_i^h,P(O_i^h|xd_{s})) \,:=\,$ \genObs{$\Gamma_{PBVI}^{h-1},a,b_i$}\;}
+       		 \ForEach {$o \in \mathcal{O}_i^{h}$}
        		 {
-				\ForEach {$\alpha_j^{h-1} \in \Gamma^{h-1}$}
+				\ForEach {$\alpha_j^{h-1} \in \Gamma_{PBVI}^{h-1}$}
        			{
    	 		  		$\alpha_j^{h'},:=\,$ \remapWithPrimes{$\alpha_j^{h}$} 
    	 		  		\emph{// $\forall$ $d_i \to d_i'$ and $\forall x_i \to x_i'$} \; 
-   	 		    	$\Gamma_{a,xd_{o_i},j}^h \,:=\, P(xd_{o_i}|xd_{s_i}) \otimes$ \backup{$\alpha_j^{h'},a$}\;
+%   	 		    	$\Gamma_{a,xd_{o_i},j}^h \,:=\, P(o|xd_{s}) \cdot$ \backup{$\alpha_j^{h'},a$}\;
+   	 		    	{$g_{a,o,j}^h \,:=\, $ see Eq~\eqref{eq:backup}}
        	      	}
-       	      	$\Gamma_{a,xd_o}^h\,:=\,\textrm{\large $\boxplus$} \Gamma_{a,xd_{o_i}}^h$\;
+%       	      	$\Gamma_{a,xd_o}^h\,:=\,\textrm{\large $\boxplus$} \Gamma_{a,xd_{o_i}}^h$\;
+%       	      	$\Gamma_{a,xd_o}^h\,:=\, $ see Eq~\eqref{eq:cross_prod}\;
        	     }
-           $\Gamma_a^{h} \,:=\,R_a \oplus \gamma \cdot \Gamma_{a,xd_o}^h$\;
+%           $\Gamma_a^{h} \,:=\,R_a \oplus \gamma \cdot \Gamma_{a,xd_o}^h$\;
+            $\Gamma_a^{h} \,:=\, $ see Eq~\eqref{eq:cross_prod}\;
             $\Gamma^{h} \,:=\, \Gamma^{h} \cup \Gamma_a^{h}$\;
        	 }  
         	%monahan's pruning first generates all vectors, then prunes
@@ -353,11 +416,11 @@ The possible set of conditional plans $\beta^h$ correspond to a decision tree. F
              % $\pi^{*,h} \,:=\, \argmax_{a} \, \Gamma_a^{h}$\;
       \ForEach {$b_i \in B$}
       {
-     	$\alpha_{b_i}^h :=\ \argmax_{\alpha_j \in \Gamma^h} \Gamma^{h}$\;
+     	$\alpha_{b_i}^h :=\ \argmax_{\alpha_j \in \Gamma^h} \alpha_j \cdot b_i$\;
      	$\Gamma_{PBVI}^h :=\ \Gamma_{PBVI}^h \cup \alpha_{b_i}^h$\;
       }
 
-       \If{$V^h = V^{h-1}$}
+       \If{$\Gamma_{PBVI}^h = \Gamma_{PBVI}^{h-1}$}
            {break $\,$ \emph{// Terminate if early convergence}\;}
    }
      \Return{$\Gamma_{PBVI}$} \;
@@ -368,50 +431,38 @@ The possible set of conditional plans $\beta^h$ correspond to a decision tree. F
 \decmargin{.5em}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-For discrete observations and discrete states the number of belief states is infinite, but the optimal value function for $h$ is proven to be a piecewise linear and convex function of the belief state \cite{smallwoodSondik}. The optimal value function is the maximum value over a finite set of alpha vectors  $\alpha^h_i$:%that define the hyperplanes:
-{\footnotesize
-\begin{equation}
-V^h_{\Pi^*}(\vec{b}) = \max_{\alpha^h_i \in \Gamma^h} \alpha^h_i \cdot \vec{b}
-\end{equation}
-}
-where the belief states $\vec{b}$ and each $\alpha^h_i \in \Gamma^h$ are of dimension $|\mathcal{S}|$. 
+\textbf{Point-based value iteration (PBVI)} computes the optimal value function only for a set of belief states $\{ b_i \}$ where $b_i := P(xd_s)$.  The idea is straightforward and the main modification needed to Monahan's algorithm in Algorithm~\ref{alg:vi} is the loop from lines 19--21 where only $\alpha$-vectors optimal at some belief state are retained for subsequent iterations.  We note that \emph{if} all beliefs reachable in $h$ steps from some initial set can be finitely enumerated and PBVI is executed for this set of beliefs, then optimality is guaranteed for the PBVI policy over these initial beliefs up to horizon $h$.  
+%In actuality in the DC-POMDP setting, the generation of continuous observations will most often lead to an infinite number of reachable belief states even in one step, so this optimality guarantee of PBVI will only hold for DC-POMDPs in very special cases when the set of reachable beliefs is finite.  Nonetheless, PBVI has been quite successful in practice without exhaustive enumeration of all reachable beliefs~\cite{pbvi_jair06,hsvi2,Perseus,gapmin}, which motivates our use of PBVI in this work.
 
-\textbf{Point-based dynamic programming backups} compute the optimal value function given a belief state $b$. The best conditional plan for the given belief, corresponds to an $\alpha$-vector which is computed using point-based backups: 
-{\footnotesize
-\begin{align*}
-\alpha^{h+1}(b) = R(b) + \gamma \int_{xd_o} P(xd_o|a,b)\alpha^{h+1}(b)\nonumber
-\end{align*}
-}
-where $P(xd_o|a,b) = \int_{xd_s}\int_{xd'_s}b(s)P(xd'_s|xd_s,a)P(xd_o|xd'_s,a)$.
+We pause for a moment to make a few notes about the \texttt{PBVI}
+algorithm in the context of DC-POMDPs.  If we have a fixed discrete
+observation set, i.e., $forall h \, \mathcal{O}^h = \mathcal{O}$, then
+the algorithm proceeds as usual, but if we have continuous observation
+variables then we will need to derive a relevant set of observations
+on line 10, which we describe in Section~\ref{sec:cont_obs}.  We need
+to guarantee that the integral on line 14 can be done in closed-form
+and we guarantee this for piecewise functions in
+Section~\ref{sec:disc_obs}.  Because in general we will deal with
+$\alpha$-functions represented as piecewise functions, we only assume
+that strict dominance testing is implemented for \texttt{Prune} in
+line 18.
 
-Calculating all possible ways of building the value function independent of a certain belief state can also define the optimal value function. To derive the $\Gamma$-set of all possible $\alpha$-vectors for each horizon, we use the value iteration algorithm from ~\cite{monahan82}. Initializing  $\alpha^0_1 = \vec{0}$ and $\Gamma^0 = \{ \alpha^0_1 \}$, $\Gamma^h$ is obtained from $\Gamma^{h-1}$ using the backup operation defined in (2):\footnote{The $\textrm{\large $\boxplus$}$ of sets is defined as 
-$\textrm{\large $\boxplus$}_{j \in \{ 1,\ldots, n \} } S_j = S_1 \textrm{\large $\boxplus$} \cdots \textrm{\large $\boxplus$} S_n$ where the pairwise cross-sum $P 
-\textrm{\large $\boxplus$} Q = \{ \vec{p} + \vec{q} | \vec{p} \in P, \vec{q} \in Q \}$.}
-{\footnotesize
-\begin{align}
-g^h_{a,o,j} &=  \int_{x_{s'}} \sum_{d_{s'}} p(xd_o|xd'_s,a)p(xd'_s|xd_s,a) \alpha^h_j(xd'_s) \\
-\Gamma^{h}_a   &= r_a + \gamma \textrm{\large $\boxplus$}_{o \in \mathcal{O}} \left\{ g^h_{a,o,j}(\cdot) \right\}_j ;  \forall \alpha^{h-1}_{j} \in \Gamma^{h-1}  \\
-\Gamma^h  &= \bigcup_a \Gamma^h_a 
-\end{align}
-}
-where $r_a = r(x_s,d_s,a)$.  
-%Each action-dependent $\Gamma$ sums over the possible set of $g^h_{a,o,j}(\cdot)$ given an observation model to derive discrete observations $xd_o$ and for all $\alpha^{h-1}_{j} \in \Gamma^{h-1} $. The value $g^h_{a,o,j}(\cdot)$ is computed by summing over all states given the probability functions and previous $\alpha$-vectors.  
-Lines 7--15 of the \texttt{PBVI} algorithm show the general algorithm used for both discrete and continuous observations. We will discuss this according to our symbolic framework in the next section. 
-For all $\alpha$-vectors in the current $\Gamma$-set the \texttt{Prune} function uses an LP-solver to prune any inconsistency in the branches of this vector in line 16 similar to the approach in ~\cite{penberthy94}. A pairwise dominance test is also performed where for all $j,k$: $\alpha_j(\vec{s}) \geq \alpha_k(\vec{s})$
-The result of this pairwise test is a dominant $\alpha$-vector which is added to the set of $\Gamma^h$. 
-%Here the cross-sum operation takes the set of $\alpha$ -vectors for each observation and produces a sum over vectors that depends on the number of previous iteration vectors. 
-
-Note that the $\alpha$-vector set grows exponentially in the number of observations, i.e., $|\Gamma^{h}| = |\mathcal{A}||\Gamma^{h-1}|^{|\mathcal{O}|}$ during the cross-sum operation. For this reason even for a small number of discrete observations, tractable solutions may be hard to define. Here we do not restrict our observations to discrete ones, but extend it to a fully continuous approach where lines 7--8 will be executed to generate relevant observation partitions based on a belief state $b_i$. We use the number of  observation partitions $|\mathcal{O}|$ as the branching factor in the policy tree. We present the symbolic approach required to partition this continuous space. 
 
 \section{Symbolic Dynamic Programming} 
-Dynamic programming provides exact solutions to POMDP problems for small domains. As the domain grows, fully enumerating the state, action and observation space leads to intractable solutions even for low horizons. Avoiding this enumeration often requires approximating the solution. We claim an exact solution using symbolic dynamic programming. The SDP solution for fully observable domains has been presented in \cite{sanner_uai11} %using piecewise constant functions
-Our symbolic algorithm deals with continuous observations and states by generating the relevant observation partition at every time step and performing the backup operation using $\alpha$-vectors. We define the requirements to implement the value iteration algorithm for DC-POMDP. 
+
+In this section we take a symbolic dynamic programming (SDP) approach
+to performing \texttt{PBVI} in Algorithm~\ref{alg:vi}.  This requires
+us to define all of the operations used in \texttt{PBVI} on a
+closed-form representation.  For SDP, this closed-form will be a
+piecewise case statement and it will stored compactly as a decision
+diagram~\cite{sanner_uai11}.  We first review this form and then
+proceed to define SDP operations specific to the case of DC-POMDPs.
 
 \subsection{Case Representation and Extended ADDs}
 % operations, max, restrict, substitute
 %overview + example plant
-The \textsc{Power Plant} example represented all functions using the case structure which can be generally defined as:
-{\footnotesize 
+The \textsc{\bf Power Plant} example represented all functions using
+the case structure which can be generally defined as {\footnotesize
 \vspace{-3mm}
 \begin{align}
 f = 
@@ -422,8 +473,10 @@ f =
 \end{cases} \nonumber
 \end{align}
 }
-Where $\phi_i$ are disjoint logical formulae defined over the state $(\vec{d},\vec{x})$ with logical ($\land,\lor,\neg$) combinations of boolean variables and inequalities ($\geq,>,\leq,<$) over continuous variables.  
-The $f_i$ are function definitions either linear or quadratic in the continuous parameters. 
+and this is the form we use to represent all functions in a DC-POMDP.
+Here $\phi_i$ are disjoint logical formulae defined over the state $(\vec{d},\vec{x})$ with logical ($\land,\lor,\neg$) combinations of boolean variables and inequalities ($\geq,>,\leq,<$) over continuous variables.  
+The $f_i$ are general functions, we will restrict them later for the
+case of continuous observation POMDPs.
 
 For \emph{unary operations} such as scalar multiplication $c\cdot f$ (for some constant $c \in \mathbb{R}$) or negation $-f$ on case statements is simply to apply the operation on each case partition $f_i$ ($1 \leq i \leq k$). 
 A \emph{binary operation} on two case statements, takes the cross-product of the logical partitions of each case statement and performs the corresponding operation on the resulting paired partitions.  The cross-sum $\oplus$ of two cases is defined as the following:
@@ -499,12 +552,12 @@ $ = $
 \end{center}
 \vspace{-3mm}
 }
-We also require the following SDP operations on case statements already introduced in the literature: 
+The following SDP operations on case statements require more detail than can be provided here, hence we refer the reader to the relevant literature:
 \begin{itemize}
 \item Restriction $f|_{\phi}$:  Takes a function $f$ to restrict only in cases
 that satisfy some formula $\phi$ as defined in \cite{sanner_uai11}.
 \item Substitution $f\sigma$ : Takes a set $\sigma$ of variables and their substitutions, where the LHS of the substitution operator $/$ represents the substitution variable and the RHS of the $/$ represents the expression that should be substituted in its place as in \cite{sanner_uai11}.
-\item Integration $\int_{x_1} f dx_1$:  Eliminates continuous variables by taking the integral of the polynomial function $f$ with respect to linear constraints on $x_1$  \cite{sanner_aaai12}.
+\item Integration $\int_{x_1} f dx_1$:  Eliminates continuous variables by taking the integral of case statements $f$ restricted to linear constraints and polynomial values~\cite{sanner_aaai12}.
 \end{itemize}
 \vspace{-2mm}
 %\emph{Restriction} takes a function $f$ to restrict only in cases
@@ -546,8 +599,10 @@ that satisfy some formula $\phi$ as defined in \cite{sanner_uai11}.
 %representation, we obtain the right side of the above. 
 
 %xadd representation
-The data structure of \emph{extended ADD} (XADD)~\cite{sanner_uai11} is used to support
-case statements and the required operations.  Here we use continuous SDP for both states and observations in DC-POMDPs. The $\alpha$-vectors partition into states of equal value, both of which can be represented using XADDs. For increasing efficiency linear constraint feasibility checkers such as LP solvers allow pruning unreachable paths in the XADD. Figure 1,right is an example of an XADD representation. 
+The data structure of the \emph{extended algebraic decision diagram}
+(XADD)~\cite{sanner_uai11} is used to support case statements and the
+required operations.  Figure~\ref{fig:cond_plan} (right) 
+is an example of an XADD representation.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %\incmargin{.5em}
@@ -569,10 +624,11 @@ case statements and the required operations.  Here we use continuous SDP for bot
 %\decmargin{.5em}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{PBVI for DC State and Discrete Observations} 
+\label{sec:disc_obs}
 
 For discrete and continuous states and discrete observations, we use the symbolic version of Monahan's algorithm as the DC-POMDP solution represented in \texttt{PBVI}. The same approach is required for continuous observations only based on point-based dynamic programming backups.
 
-Given an initial set of beliefs, we can compute the relevant observation partitions explained in the next section and then continue in a similar fashion of having discrete observations. %To visualize we explain of the value iteration algorithm as defined in \texttt{VI} for DC-POMDPs. Each step of the algorithm is explained using the \textsc{Power plant} example for the first three horizons. 
+Given an initial set of beliefs, we can compute the relevant observation partitions explained in the next section and then continue in a similar fashion of having discrete observations. %To visualize we explain of the value iteration algorithm as defined in \texttt{VI} for DC-POMDPs. Each step of the algorithm is explained using the \textsc{\bf power plant} example for the first three horizons. 
 Note that if the input to this algorithm is continuous observations $ContObs=true$ then line 8 finds the relevant observation partitions, else discrete observations are assumed and their probabilities are given in the problem specifications such as section 2. Also a set of beliefs are given as the input as often several beliefs are required to cover the belief space and thus the algorithm is executed for each one of $b_i \in B$.
 For each iteration, lines 11--12 product the following equation: 
 {\footnotesize
@@ -628,9 +684,11 @@ In the next section we discuss the main part of our algorithm which is generatin
 \decmargin{.5em}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{PBVI for DC State and DC Observations} 
+\label{sec:cont_obs}
+
 The main operations required for value iteration in DC-POMDP is generating relevant observations to perform the bellman backup operation. 
 The \texttt{GenRelObs} algorithm defines the steps required to generate these partitions. 
-We use the second iteration of the \textsc{Power Plant} example to demonstrate partitioning of the entire continuous observation space. The main assumption is to consider some belief state and obtaining the relevant partitions according to that belief. We choose these beliefs such that they cover the entire probable state space; e.g. $b_1: U[t_s;2,6]$ and $b_2: U[t_s;6,11]$.
+We use the second iteration of the \textsc{\bf Power Plant} example to demonstrate partitioning of the entire continuous observation space. The main assumption is to consider some belief state and obtaining the relevant partitions according to that belief. We choose these beliefs such that they cover the entire probable state space; e.g. $b_1: U[t_s;2,6]$ and $b_2: U[t_s;6,11]$.
 
 Starting with an empty set of relevant observation partitions $z$, the algorithm first eliminates the next state variable $xd'_s$. It multiplies the observation model and the transition model in the set of $\alpha$-vectors of the previous horizon:
 $\alpha_j(xd_s,xd_o) := \int_{s'} P(xd_{o_i}|xd'_{s_i},a) * P(xd'_{s_i}| xd_{s_i},a)* \alpha_j $. 
@@ -715,7 +773,7 @@ For $b_1: U[t_s;2,6]$ assume the following simple $\delta$-functions:
 \hspace{-17mm}
 \vspace{-10mm}
 \caption{\footnotesize 
-{\it (left)} Beliefs $b_1,b_2$ for 1D \textsc{Power Plant} example; 
+{\it (left)} Beliefs $b_1,b_2$ for 1D \textsc{\bf Power Plant} example; 
 {\it (middle)} Observation dependent function for $b_1$ that partition the observation space into 2 regions with different probabilities $P(z_i)$ ; 
 {\it (right)} 3 Relevant observation partitions and their probabilities for $b_2$.
 }
@@ -773,7 +831,7 @@ Next we present some results for 2-Dimensional continuous observation spaces.
 
 \section{Empirical Results}
 %We evaluated our continuous POMDP solution using XADDs on the one-dimensional
-%\textsc{Power Plant} example and another variant of this problem with two variables. \footnote{
+%\textsc{\bf Power Plant} example and another variant of this problem with two variables. \footnote{
 %Full problem specifications and Java code to reproduce these experiments are currently 
 %in Google Code; anonymity restrictions prevent us from providing this link in the submitted paper version.}
 The 2-dimensional model description is provided below:
@@ -795,7 +853,7 @@ The 2-dimensional model description is provided below:
 \end{figure*}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-{\bf \textsc{2D-Power Plant}:} We consider the more complex model of the power plant similar to \cite{steam2} where the pressure inside the water tank must be controlled to avoid mixing water into the steam or explosion of the tank. We model the pressure variable $p$ as a partially observable variable from the observation readings of the pressure $po$. The two actions of increase and decrease are defined based on the change in both the temperature and the pressure. For the increase action we define: %the transition functions and the reward function is defined as below: 
+{\bf \textsc{\bf 2D-Power Plant}:} We consider the more complex model of the power plant similar to \cite{steam2} where the pressure inside the water tank must be controlled to avoid mixing water into the steam or explosion of the tank. We model the pressure variable $p$ as a partially observable variable from the observation readings of the pressure $po$. The two actions of increase and decrease are defined based on the change in both the temperature and the pressure. For the increase action we define: %the transition functions and the reward function is defined as below: 
 {\footnotesize
 \begin{align}
 P(p_s'|\vec{p_s},inc)&= \delta\left[ p_s' - 
@@ -857,7 +915,7 @@ We define two rectangular uniform beliefs around the regions of rewarding, so th
 %\end{align}
 % I can draw this and the 1D belief
 In Figure ~\ref{fig:timeSpace}, a time and space analysis of
-the two versions of \textsc{Power Plant} have been performed for up to 6 horizons. %Comparing the two problem sizes demonstrates the effect of the number of state-observation variables in our algorithm. 
+the two versions of \textsc{\bf Power Plant} have been performed for up to 6 horizons. %Comparing the two problem sizes demonstrates the effect of the number of state-observation variables in our algorithm. 
 As the algorithm progresses, the time required to compute the probability of the partitions and finding the maximum $\alpha$-vector with respect to beliefs increases for both problem sizes and significantly more for the 2D version. %The stability in time is due to the fact that each stage almost takes the same time since it has converged quickly.%???
 Increase in the problem size, increases the partition numbers on the observation space and this produces more $\alpha$-vectors which also effects the space required to perform the algorithm. The number of vectors stays the same for most horizons and they drop after convergence in the 2D problem instance. %The number of nodes in each iteration increases as more space is required to perform higher iterations.
 This shows that although the 2D instance takes more time and space than the 1D instance, it still converges within reasonable resources.
