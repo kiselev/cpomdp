@@ -367,6 +367,7 @@ g^h_{a,o,j} &=  \int_{x_{s'}} \sum_{d_{s'}} p(o|xd'_s,a)p(xd'_s|xd_s,a) \alpha^h
 \Gamma^h  &= \bigcup_a \Gamma^h_a 
 \end{align}
 }
+\vspace{-3mm}
 where $r_a = r(x_s,d_s,a)$.  
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -426,7 +427,7 @@ where $r_a = r(x_s,d_s,a)$.
      \Return{$\Gamma_{PBVI}$} \;
 }
 \caption{\footnotesize \texttt{PBVI}(DC-POMDP, $H$,$ContObs$, $B=\left\{b_i \right\}$) $\longrightarrow$ $(V^h,\pi^{*,h})$ \label{alg:vi}}
-\vspace{-1mm}
+\vspace{-3mm}
 \end{algorithm}
 \decmargin{.5em}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -454,7 +455,7 @@ In this section we take a symbolic dynamic programming (SDP) approach
 to performing \texttt{PBVI} in Algorithm~\ref{alg:vi}.  This requires
 us to define all of the operations used in \texttt{PBVI} on a
 closed-form representation.  For SDP, this closed-form will be a
-piecewise case statement and it will stored compactly as a decision
+piecewise case statement and it will be stored compactly as a decision
 diagram~\cite{sanner_uai11}.  We first review this form and then
 proceed to define SDP operations specific to the case of DC-POMDPs.
 
