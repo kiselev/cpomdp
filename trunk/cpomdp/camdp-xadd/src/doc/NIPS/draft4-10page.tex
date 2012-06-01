@@ -325,7 +325,7 @@ The possible set of conditional plans $\beta^h$ correspond to a decision tree. F
    $V^0:=0, h:=0$\;
    \While{$h < H$}
    {
-       $h:=h+1, \Gamma^h :=\emptyset$\;
+       $h:=h+1, \Gamma_{PBVI}^h :=\emptyset$\;
        \ForEach {$b_i \in B$}
        {
        	\ForEach {$a \in A$}
@@ -354,7 +354,7 @@ The possible set of conditional plans $\beta^h$ correspond to a decision tree. F
       \ForEach {$b_i \in B$}
       {
      	$\alpha_{b_i}^h :=\ \argmax_{\alpha_j \in \Gamma^h} \Gamma^{h}$\;
-     	$\Gamma_{PBVI}^h :=\ \Gamma^h \cup \alpha_{b_i}^h$\;
+     	$\Gamma_{PBVI}^h :=\ \Gamma_{PBVI}^h \cup \alpha_{b_i}^h$\;
       }
 
        \If{$V^h = V^{h-1}$}
@@ -396,8 +396,8 @@ g^h_{a,o,j} &=  \int_{x_{s'}} \sum_{d_{s'}} p(xd_o|xd'_s,a)p(xd'_s|xd_s,a) \alph
 }
 where $r_a = r(x_s,d_s,a)$.  
 %Each action-dependent $\Gamma$ sums over the possible set of $g^h_{a,o,j}(\cdot)$ given an observation model to derive discrete observations $xd_o$ and for all $\alpha^{h-1}_{j} \in \Gamma^{h-1} $. The value $g^h_{a,o,j}(\cdot)$ is computed by summing over all states given the probability functions and previous $\alpha$-vectors.  
-Lines 7--15 of the \textsc{PBVI} algorithm show the general algorithm used for both discrete and continuous observations. We will discuss this according to our symbolic framework in the next section. 
-For all $\alpha$-vectors in the current $\Gamma$-set the \textsc{Prune} function uses an LP-solver to prune any inconsistency in the branches of this vector in line 16 similar to the approach in ~\cite{penberthy94}. A pairwise dominance test is also performed where for all $j,k$: $\alpha_j(\vec{s}) \geq \alpha_k(\vec{s})$
+Lines 7--15 of the \texttt{PBVI} algorithm show the general algorithm used for both discrete and continuous observations. We will discuss this according to our symbolic framework in the next section. 
+For all $\alpha$-vectors in the current $\Gamma$-set the \texttt{Prune} function uses an LP-solver to prune any inconsistency in the branches of this vector in line 16 similar to the approach in ~\cite{penberthy94}. A pairwise dominance test is also performed where for all $j,k$: $\alpha_j(\vec{s}) \geq \alpha_k(\vec{s})$
 The result of this pairwise test is a dominant $\alpha$-vector which is added to the set of $\Gamma^h$. 
 %Here the cross-sum operation takes the set of $\alpha$ -vectors for each observation and produces a sum over vectors that depends on the number of previous iteration vectors. 
 
@@ -570,7 +570,7 @@ case statements and the required operations.  Here we use continuous SDP for bot
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{PBVI for DC State and Discrete Observations} 
 
-For discrete and continuous states and discrete observations, we use the symbolic version of Monahan's algorithm as the DC-POMDP solution represented in \textsc{PBVI}. The same approach is required for continuous observations only based on point-based dynamic programming backups.
+For discrete and continuous states and discrete observations, we use the symbolic version of Monahan's algorithm as the DC-POMDP solution represented in \texttt{PBVI}. The same approach is required for continuous observations only based on point-based dynamic programming backups.
 
 Given an initial set of beliefs, we can compute the relevant observation partitions explained in the next section and then continue in a similar fashion of having discrete observations. %To visualize we explain of the value iteration algorithm as defined in \texttt{VI} for DC-POMDPs. Each step of the algorithm is explained using the \textsc{Power plant} example for the first three horizons. 
 Note that if the input to this algorithm is continuous observations $ContObs=true$ then line 8 finds the relevant observation partitions, else discrete observations are assumed and their probabilities are given in the problem specifications such as section 2. Also a set of beliefs are given as the input as often several beliefs are required to cover the belief space and thus the algorithm is executed for each one of $b_i \in B$.
@@ -578,10 +578,10 @@ For each iteration, lines 11--12 product the following equation:
 {\footnotesize
 \vspace{-2mm}
 \begin{align}
-g^h_{a,o,j} =  \int_{x_{s'}} \oplus_{d_{s'}} p(xd_o|xd'_s,a)p(xd'_s|xd_s,a) \alpha^h_j(xd'_s) \nonumber
+g^h_{a,o,j} =  \int_{x_{s'}} \large \oplus_{d_{s'}} p(xd_o|xd'_s,a)p(xd'_s|xd_s,a) \alpha^h_j(xd'_s) \nonumber
 \end{align}
 }
-where the first probability is from equation (2) and the next probability is from equation (1) of the example. The $\alpha$-vectors are case functions primed using substitution in \textsc{Prime}. \texttt{Backup} performs regression on the $\alpha$-vectors where \textit{Boolean regression} is performing a symbolic restriction and \textit{Continuous regression} is a symbolic substitution, both SDP operations. 
+where the first probability is from equation (2) and the next probability is from equation (1) of the example. The $\alpha$-vectors are case functions primed using substitution in \texttt{Prime}. \texttt{Backup} performs regression on the $\alpha$-vectors where \textit{Boolean regression} is performing a symbolic restriction and \textit{Continuous regression} is a symbolic substitution, both SDP operations. 
 Lines 14--16 cover closed form operations on the $\Gamma$-set such as cross-sum and union. Finally lines 18--20 find the maximum $\alpha$-vector within the $\Gamma^h$ set and add this to the final $\Gamma_{PBVI}^h$ if it is not already in the set. 
 %Line 13 takes the cross-sum of the two sets, followed by adding the reward to the discounted result. For all actions the  $\Gamma$-set is added to the $\Gamma^h$ of the current horizon. The result is pruned as explained earlier.%which takes every possible combination of observations according to the $\alpha$-vectors. 
 %All vectors are then multiplied by the discount $\gamma$ and added with the reward in line 14 where the addition is an augmented $\oplus$ for adding each vector with the reward function. 
@@ -590,28 +590,6 @@ Lines 14--16 cover closed form operations on the $\Gamma$-set such as cross-sum 
 %The $\alpha$-vector that maximizes the value-function with respect to this belief and save it as the new $\Gamma$-set for the next horizon. The action from which this $\alpha$-vector was chosen from is the maximum policy. 
 %This operation is performed for each of the belief points $b_i \in B$ and for each belief point one dominant $\alpha$-vector is stored in the $\Gamma$-set. The algorithm iterates until convergence. 
 In the next section we discuss the main part of our algorithm which is generating relevant observation partitions.
-
-\subsection{PBVI for DC State and DC Observations} 
-The main operations required for value iteration in DC-POMDP is generating relevant observations to perform the bellman backup operation. 
-The \texttt{GenRelObs} algorithm defines the steps required to generate these partitions. 
-We use the second iteration of the \texttt{Power Plant} example to demonstrate partitioning of the entire continuous observation space. The main assumption is to consider some belief state and obtaining the relevant partitions according to that belief. We choose these beliefs such that they cover the entire probable state space; e.g. $b_1: U[t_s;2,6]$ and $b_2: U[t_s;6,11]$.
-
-Starting with an empty set of relevant observation partitions $z$, the algorithm first eliminates the next state variable $xd'_s$. It multiplies the observation model and the transition model in the set of $\alpha$-vectors of the previous horizon:
-$\alpha_j(xd_s,xd_o) := \int_{s'} P(xd_{o_i}|xd'_{s_i},a) * P(xd'_{s_i}| xd_{s_i},a)* \alpha_j $. 
-This operation of line 3 in \texttt{GenRelObs} is similar to that of \texttt{Regress} multiplied by the observation regressed model. For continuous variables the continuous regression and for discrete variables boolean restriction is used as defined in the previous section. 
-Assuming that after $h=1$ the set of $\alpha$-vectors are defined as:
-{\footnotesize
-\vspace{-3mm}
-\begin{align}
-\alpha_1^1(t_s) &= 
-\begin{cases}
- (t_s>200) &: -1000 \\
-\neg(t_s>200) &: 100 \\
-\end{cases}
-\hspace{10mm} 
-\alpha_2^1(t_s) = \top: -1 \nonumber
-\end{align}
-}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \incmargin{.5em}
 \linesnumbered
@@ -625,22 +603,22 @@ Assuming that after $h=1$ the set of $\alpha$-vectors are defined as:
 	$z:=0$;\	
 		\For {all $\alpha_j$ in  $\Gamma^{h-1}$}    
 		{
+		\emph{// Point-based backup operation}\\
     	$\alpha_j(xd_s,xd_o) := \int_{s'} P(xd_{o_i}|xd'_{s_i},a) \cdot P(xd'_{s_i}| xd_{s_i},a)\cdot \alpha_j $\;
-    	\emph{// Point-based backup operation}\\
 		}  
 		\For {all $j$ in $\alpha_j(xd_s,xd_o)$}    
 		{
-		$\delta_{j}(xd_o) := $ $\int_{xd_{s_i}} b_i \cdot \alpha_j(xd_s,xd_o)$\}\ \;
 		\emph{// Generate value of $\alpha$-vector for belief $b_i$ as a function of observations}\\
+		$\delta_{j}(xd_o) := $ $\int_{xd_{s_i}} b_i \cdot \alpha_j(xd_s,xd_o)$\}\ \;
 		}
 		\For {all $j$ in $\delta_{j}(xd_o)$}    
 		{
-		$z := max(\delta_j(xd_o),z)$\;
 		\emph{// Finding partition points on the observation space}\\
+		$z := max(\delta_j(xd_o),z)$\;
     	}
     	\emph{// $\phi_{z_k}$ logical term on each partition of $z$}\\
+    	\emph{// Generate probabilities and partitions of observations that distinguish optimal $\alpha$-vector (conditional plan)}\\
    		$P(z_k) := \int_{xd_o}\int_{xd_s} P(xd_o|xd'_s,a)*P(xd'_s|xd_s,a)*b_i* \mathbb{I}[\phi_{z_k}] d_{xd_o} d_{xd_s}$ \;
-   		\emph{// Generate probabilities and partitions of observations that distinguish optimal $\alpha$-vector (conditional plan)}\\
     \Return{$P(z)$} \;
     %do this for each belief in B
 }
@@ -649,7 +627,28 @@ Assuming that after $h=1$ the set of $\alpha$-vectors are defined as:
 \end{algorithm}
 \decmargin{.5em}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-For $h=2$ the resulting $\alpha$-vectors after this regression step are functions of the observation and current state: 
+\subsection{PBVI for DC State and DC Observations} 
+The main operations required for value iteration in DC-POMDP is generating relevant observations to perform the bellman backup operation. 
+The \texttt{GenRelObs} algorithm defines the steps required to generate these partitions. 
+We use the second iteration of the \textsc{Power Plant} example to demonstrate partitioning of the entire continuous observation space. The main assumption is to consider some belief state and obtaining the relevant partitions according to that belief. We choose these beliefs such that they cover the entire probable state space; e.g. $b_1: U[t_s;2,6]$ and $b_2: U[t_s;6,11]$.
+
+Starting with an empty set of relevant observation partitions $z$, the algorithm first eliminates the next state variable $xd'_s$. It multiplies the observation model and the transition model in the set of $\alpha$-vectors of the previous horizon:
+$\alpha_j(xd_s,xd_o) := \int_{s'} P(xd_{o_i}|xd'_{s_i},a) * P(xd'_{s_i}| xd_{s_i},a)* \alpha_j $. 
+This operation of line 3 in \texttt{GenRelObs} is similar to that of \texttt{Regress} multiplied by the observation regressed model. For continuous variables the continuous regression and for discrete variables boolean restriction is used as defined in the previous section. 
+Assuming that after $h=1$ the set of $\alpha$-vectors are defined equal to the reward function of equation (1).
+%{\footnotesize
+%\vspace{-3mm}
+%\begin{align}
+%\alpha_1^1(t_s) &= 
+%\begin{cases}
+% (t_s>200) &: -1000 \\
+%\neg(t_s>200) &: 100 \\
+%\end{cases}
+%\hspace{10mm} 
+%\alpha_2^1(t_s) = \top: -1 \nonumber
+%\end{align}
+%}
+For $h=2$ the resulting $\alpha$-vectors after the regression step are functions of the observation and current state: 
 {\footnotesize
 \vspace{-2mm}
 \begin{align}
@@ -716,7 +715,7 @@ For $b_1: U[t_s;2,6]$ assume the following simple $\delta$-functions:
 \hspace{-17mm}
 \vspace{-10mm}
 \caption{\footnotesize 
-{\it (left)} Beliefs $b_1,b_2$ for 1D \texttt{Power Plant} example; 
+{\it (left)} Beliefs $b_1,b_2$ for 1D \textsc{Power Plant} example; 
 {\it (middle)} Observation dependent function for $b_1$ that partition the observation space into 2 regions with different probabilities $P(z_i)$ ; 
 {\it (right)} 3 Relevant observation partitions and their probabilities for $b_2$.
 }
@@ -730,8 +729,8 @@ The observation dependent $\delta$-functions divide the observation space into r
 \begin{align}
 \mathrm{max} \Bigg(\delta_{1}(t_o),\delta_{2}(t_o)\Bigg) &= 
 \begin{cases}
- (t_o<2) &: -0.4*t_o +6.8 \\
-(t_o>2) &: 1.3*t_o +3.4
+ z_1:(t_o<2 : -0.4*t_o +6.8) \\
+z_2:(t_o>2 : 1.3*t_o +3.4)
 \end{cases}
 \nonumber
 \end{align}
@@ -740,17 +739,18 @@ The two partitions define observation regions which we can now use in a similar 
 $\int_{xd_o}\int_{xd_s} P(xd_o|xd'_s,a)*P(xd'_s|xd_s,a)*P(s) = 1$
 Thus we only need to multiply the indicators of each case partition as as in line 9 in this formula to obtain the probability of each partition such that it sums to one: 
 $P(z_k) := \int_{xd_o}\int_{xd_s} P(xd_o|xd'_s,a)*P(xd'_s|xd_s,a)*b_i* \mathbb{I}[\phi_{z_k}] d_{xd_o} d_{xd_s}$
-For our example the following holds: 
-{\footnotesize
-\begin{align}
-P(z_k)=
-\begin{cases}
- (t_o<2) &: 0.2 \\
-(2<t_o) &: 0.8\\
-\end{cases} 
-\nonumber
-\end{align}
-}
+For our example the probabilities are defined as $P(z_1)=0.2$ and $P(z_2)=0.8$.
+%{\footnotesize
+%\begin{align}
+%P(z_k)=
+%\begin{cases}
+% (t_o<2) &: 0.2 \\
+%(2<t_o) &: 0.8\\
+%\end{cases} 
+%\nonumber
+%\end{align}
+%}
+
 Hence we can now use the algorithms and methods of a discrete observation setting using the probabilities of the partitioned observation space in Monahan's algorithm. 
 %Figure ~\ref{fig:obsPartition} shows the observation partitions obtained in the 1D problem instance for different horizons and their related probabilities. In a lyx file, needed?
 Next we present some results for 2-Dimensional continuous observation spaces.
@@ -772,11 +772,11 @@ Next we present some results for 2-Dimensional continuous observation spaces.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Empirical Results}
-We evaluated our continuous POMDP solution using XADDs on the one-dimensional
+%We evaluated our continuous POMDP solution using XADDs on the one-dimensional
 %\textsc{Power Plant} example and another variant of this problem with two variables. \footnote{
 %Full problem specifications and Java code to reproduce these experiments are currently 
 %in Google Code; anonymity restrictions prevent us from providing this link in the submitted paper version.}
-We start by defining the 2-dimensional description of this problem:
+The 2-dimensional model description is provided below:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure*}[tbp!]
 \vspace{-2mm}
@@ -795,7 +795,7 @@ We start by defining the 2-dimensional description of this problem:
 \end{figure*}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-{\bf \textsc{2D-Power Plant}:} We consider the more complex model of the power plant similar to \cite{steam2} where the pressure inside the water tank must be controlled to avoid mixing water into the steam or explosion of the tank. We model the pressure variable $p$ as a partially observable variable from the observation readings of the pressure $po$. The two actions of increase and decrease are defined based on the change in both the temperature and the pressure. For the increase action the transition functions and the reward function is defined as below: 
+{\bf \textsc{2D-Power Plant}:} We consider the more complex model of the power plant similar to \cite{steam2} where the pressure inside the water tank must be controlled to avoid mixing water into the steam or explosion of the tank. We model the pressure variable $p$ as a partially observable variable from the observation readings of the pressure $po$. The two actions of increase and decrease are defined based on the change in both the temperature and the pressure. For the increase action we define: %the transition functions and the reward function is defined as below: 
 {\footnotesize
 \begin{align}
 P(p_s'|\vec{p_s},inc)&= \delta\left[ p_s' - 
@@ -806,20 +806,24 @@ P(p_s'|\vec{p_s},inc)&= \delta\left[ p_s' -
 \right]\nonumber
 \hspace{5mm} 
 P(t_s'|\vec{t_s},inc)= \delta\left[ t_s' - (t_s +10) \right]\nonumber
-\\
+\end{align}
+}
+There is a high reward for staying withing the safe temperature and pressure range since it produces power, else depending on how safe it is to have values higher or lower than the safe range, penalty is defined.
+{\footnotesize
+\vspace{-4mm}
+\begin{align}
 R(t_s,p_s,inc) &= 
 \begin{cases}
 (5 \leq p_s \leq 15)\wedge (95 \leq t_s \leq 105)&:50\\
 (5 \leq p_s \leq 15)\wedge (t_s \leq 95)&: -1\\
-(5 \leq p_s \leq 15)\wedge (t_s \geq 95)&: -3\\				
-(p_s \leq 5) &: -3\\						
+%(5 \leq p_s \leq 15)\wedge (t_s \geq 95)&: -3\\				
+%(p_s \leq 5) &: -3\\						
 (p_s \geq 15) &: -5\\ 
+else &: -3
 \end{cases}\nonumber
 \end{align}
 }
-There is a high reward for staying withing the safe temperature and pressure range since it produces power, else depending on how safe it is to have values higher or lower than the safe range, penalty is defined.
 As for the decrease action, the transition functions reduce the temperature by 5 units and the pressure by 10 units as long as the pressure stays above zero. For the reward function, we assume that there is always a small penalty for decreasing the values because power can not be generated. 
-
 For the observation model we consider two continuous uniform distributions such as the following:  
 {\footnotesize
 \begin{align}
@@ -853,10 +857,13 @@ We define two rectangular uniform beliefs around the regions of rewarding, so th
 %\end{align}
 % I can draw this and the 1D belief
 In Figure ~\ref{fig:timeSpace}, a time and space analysis of
-the two versions of \textsc{Power Plant} have been performed for up to 6 horizons. Comparing the two problem sizes demonstrates the effect of the number of state-observation variables in our algorithm. As the algorithm progresses, the time required to compute the probability of the partitions and finding the maximum $\alpha$-vector with respect to beliefs increases for both problem sizes and significantly more for the 2D version. The stability in time is due to the fact that each stage almost takes the same time since it has converged quickly.%???
-Increase in the problem size, increases the partition numbers on the observation space and this produces more $\alpha$-vectors which also effects the space required to perform the algorithm. The number of vectors stays the same for most horizons and they drop after convergence in the 2D problem instance. The number of nodes in each iteration increases as more space is required to perform higher iterations. This shows that although the 2D instance takes more time and space than the 1D instance, it still converges within reasonable resources.
+the two versions of \textsc{Power Plant} have been performed for up to 6 horizons. %Comparing the two problem sizes demonstrates the effect of the number of state-observation variables in our algorithm. 
+As the algorithm progresses, the time required to compute the probability of the partitions and finding the maximum $\alpha$-vector with respect to beliefs increases for both problem sizes and significantly more for the 2D version. %The stability in time is due to the fact that each stage almost takes the same time since it has converged quickly.%???
+Increase in the problem size, increases the partition numbers on the observation space and this produces more $\alpha$-vectors which also effects the space required to perform the algorithm. The number of vectors stays the same for most horizons and they drop after convergence in the 2D problem instance. %The number of nodes in each iteration increases as more space is required to perform higher iterations.
+This shows that although the 2D instance takes more time and space than the 1D instance, it still converges within reasonable resources.
 
-In Figure ~\ref{fig:3D}  we present plots of the maximum $\alpha$-vectors of belief $b_1$ for different iterations of the 2D problem instance. Each plot demonstrates the value of each vector as a function of the pressure and temperature. Starting with the first iteration, the value is highest for the reward range ($5<p<15 \wedge 95<t<105$) and -1 or less for other places. In the fifth iteration, the value function has partitioned into more pieces, showing how higher temperatures can increase the value without considering the effect of the pressure. In the last plot, horizon 6 has better tuned the value function so that higher temperatures and pressures increase the value of the maximum $\alpha$-vector and also within the reward range, finer grain partitions have been formed. Also note that the policy depends on the initial belief and for these plots they were based on $b_1$ which was lower than the reward range. The first action would then mean it has performed an increase while the other iterations decrease and increase respectively.  
+In Figure ~\ref{fig:3D}  we present plots of the maximum $\alpha$-vectors of belief $b_1$ for different iterations of the 2D problem instance. %Each plot demonstrates the value of each vector as a function of the pressure and temperature. 
+Starting with the first iteration, the value is highest for the reward range ($5<p<15 \wedge 95<t<105$) and -1 or less for other places. In the fifth iteration, the value function has partitioned into more pieces, showing how higher temperatures can increase the value without considering the effect of the pressure. In the last plot, horizon 6 has better tuned the value function so that higher temperatures and pressures increase the value of the maximum $\alpha$-vector and also within the reward range, finer grain partitions have been formed. %Also note that the policy depends on the initial belief and for these plots they were based on $b_1$ which was lower than the reward range. The first action would then mean it has performed an increase while the other iterations decrease and increase respectively.  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % policy2, v2plot.pdf, v9plot
 % annotation?
@@ -877,15 +884,15 @@ In Figure ~\ref{fig:3D}  we present plots of the maximum $\alpha$-vectors of bel
 \end{figure*}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-\section{Related Work and Conclusion} 
-This work has used the concept of continuous states and the SDP solution to MDPs from ~\cite{sanner_uai11} and continuous observations from the work of \cite{pascal_ijcai05}. It is exclusive in the sense that it brings together the continuous state and observation POMDPs using a symbolic approach. 
-In many applications of the POMDP framework, the state and observation space have been considered as discrete values such as ~\cite{steam2} here we avoid this general simplification and work with the real values from sensors.
-%sampling, monte carlo, particle filter, gaussians, perseus, pergeus
-
-There has been prior work on approximate solutions to POMDPs with large or continuous state spaces ~\cite{Thrun99h}, ~\cite{Perseus} and some has been extended to the continuous observation setting using methods such as sampling ~\cite{Perseus_cont}.
-In most approximate continuous state POMDP work, continuous or large discrete actions has been used. Thus we can extend the current work using \cite{zamani_aaai12} to contain continuous actions and provide exact or approximate solutions. 
-
-%\section{Conclusion}
+\section{Conclusion} 
+%This work has used the concept of continuous states and the SDP solution to MDPs from ~\cite{sanner_uai11} and continuous observations from the work of \cite{pascal_ijcai05}. It is exclusive in the sense that it brings together the continuous state and observation POMDPs using a symbolic approach. 
+%In many applications of the POMDP framework, the state and observation space have been considered as discrete values such as ~\cite{steam2} here we avoid this general simplification and work with the real values from sensors.
+%%sampling, monte carlo, particle filter, gaussians, perseus, pergeus
+%
+%There has been prior work on approximate solutions to POMDPs with large or continuous state spaces ~\cite{Thrun99h}, ~\cite{Perseus} and some has been extended to the continuous observation setting using methods such as sampling ~\cite{Perseus_cont}.
+%In most approximate continuous state POMDP work, continuous or large discrete actions has been used. Thus we can extend the current work using \cite{zamani_aaai12} to contain continuous actions and provide exact or approximate solutions. 
+%
+%%\section{Conclusion}
 We presented the first exact solution to continuous states and observations in a DC-POMDP framework. Transitions and reward functions are defined as piecewise linear functions of the continuous states. Continuous observations require definition of explicit partitions based on the observation model and the belief state of the agent. The key contribution is to define the partitions on the observation space and derive the related probabilities using symbolic integration and maximization. We extend the application to more than one state-observation setting and present the results.  
  
 %\subsubsection*{References} 
