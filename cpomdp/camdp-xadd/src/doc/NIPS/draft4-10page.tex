@@ -436,7 +436,7 @@ where $r_a = r(x_s,d_s,a)$.
 
 We pause for a moment to make a few notes about the \texttt{PBVI}
 algorithm in the context of DC-POMDPs.  If we have a fixed discrete
-observation set, i.e., $forall h \, \mathcal{O}^h = \mathcal{O}$, then
+observation set, i.e., $\forall h \, \mathcal{O}^h = \mathcal{O}$, then
 the algorithm proceeds as usual, but if we have continuous observation
 variables then we will need to derive a relevant set of observations
 on line 10, which we describe in Section~\ref{sec:cont_obs}.  We need
@@ -559,7 +559,7 @@ that satisfy some formula $\phi$ as defined in \cite{sanner_uai11}.
 \item Substitution $f\sigma$ : Takes a set $\sigma$ of variables and their substitutions, where the LHS of the substitution operator $/$ represents the substitution variable and the RHS of the $/$ represents the expression that should be substituted in its place as in \cite{sanner_uai11}.
 \item Integration $\int_{x_1} f dx_1$:  Eliminates continuous variables by taking the integral of case statements $f$ restricted to linear constraints and polynomial values~\cite{sanner_aaai12}.
 \end{itemize}
-\vspace{-2mm}
+%\vspace{-2mm}
 %\emph{Restriction} takes a function $f$ to restrict only in cases
 %that satisfy some formula $\phi$, which we write as $f|_{\phi}$.  
 %This can be done by simply appending $\phi$ to each case partition
