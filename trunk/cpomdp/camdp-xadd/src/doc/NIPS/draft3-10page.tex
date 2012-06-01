@@ -4,7 +4,7 @@
 
 \def\argmax{\operatornamewithlimits{arg\max}}
 
-\title{Exact Symbolic Dynamic Programming for Continuous POMDPs}
+\title{Symbolic Dynamic Programming for Continuous State and Observation POMDPs}
 
 
 \author{
@@ -43,6 +43,8 @@
 % puts 3 of 4 authors names on the first line, and the last on the second
 % line, try using \AND instead of \And before the third author name.
 
+\newcommand{\open}{\mathit{open}}
+\newcommand{\close}{\mathit{close}}
 \newcommand{\fix}{\marginpar{FIX}}
 \newcommand{\new}{\marginpar{NEW}}
 
@@ -53,56 +55,135 @@
 \maketitle
 
 \begin{abstract}
-Decision-theoretic planning searches for the optimal sequence of actions for a given uncertain environment. Partially Observable MDPs (POMDP) can model such environments where the underlying state is not be fully observable. %While discrete models of the environment is often used for planning, continuous models are naturally closer to the real-world. 
-While previous work have provided solutions for discrete states and/or observations, here we define the first exact solution to both continuous state and observations. The symbolic dynamic programming approach in this paper avoids enumerating the state and observation space providing solutions for general multi-variate discrete and continuous POMDPs. Our main contribution is that for a fixed set of reachable belief states and a fixed set of actions, only a \textit{finite} partitioning of the continuous observation space is required for optimality. 
-Using function representation of Affine algebraic decision diagrams (XADDs) and symbolic case operators we derive the automatic partitioning for piecewise linear dynamics %such as the reward, transition and observation function. 
-We demonstrate empirical results on an operation research domain to show the \textit{first exact solution} to continuous state and observation POMDPs.  
-%to use continuous states with discrete observations and extending it to continuous observations by defining relevant observation partitions %associated with each state partition. %This allows us to perform the Bellman backup operation efficiently. 
-%We address the problems in POMDP continuous planning and solutions to solve them symbolically. %To compactly represent the exact value functions Affine algebraic decision diagrams are used. 
+Partially-observable Markov decision processes (POMDPs) provide a
+powerful model for real-world sequential decision-making problems.  In
+recent years, point-based value iteration methods have proven to be
+extremely effective techniques for finding (approximately) optimal
+dynamic programming solutions to POMDPs when an initial set of belief
+states is known.  However, no point-based work has provided exact
+point-based backups for both continuous state and observation spaces,
+which we tackle in this paper.  Our key insight is that while there
+may be an infinite number of possible observations, there are only a
+finite number of observation partitionings that are relevant for
+optimal decision-making when a finite, fixed set of reachable belief
+states is known.  To this end, we make two important contributions:
+(1) we show how previous exact symbolic dynamic programming solutions
+for continuous state MDPs can be generalized to continuous state
+POMDPs with discrete observations, and (2) we show how this solution
+can be further extended via recently developed symbolic methods to
+continuous state and observations to \emph{derive} the minimal
+relevant observation partitioning for potentially correlated,
+multivariate observation spaces.
+%for domais with piecewise
+%polynomial transition and observation functions.  
+We demonstrate
+proof-of-concept results on uni- and multi-variate state and
+observation steam plant control.
 \end{abstract}
 
-\section{Introduction}
+\section{Introduction and Related Work}
 % Write intro here
-In many complex systems complete information of the state is not available due to noisy or poor sensors and readings of them. Partially observable Markov Decision Processes (POMDPs)\cite{POMDPfirst} can be used for planning under such uncertainty in such problems. The solution to a POMDP is to find an answer to the fully-observable belief-MDP, whose states are probability distributions over the state space of the original POMDP \cite{kaebling}
-Real-world resources and sensor inputs are often naturally modelled using continuous variables. 
-Unfortunately most POMDP techniques can not be applied to such settings without assuming prior knowledge about the problem domain. Most methods use some approximation to discretize the continuous state, observation or action space which increases computational complexity \cite{Thrun99h}. The optimal value function of belief-MDPs is piecewiselinear and convex in these discrete cases \cite{sondik71} but has also been proven in the setting of only continuous states. \cite{PerseusObs}
 
-Exact solutions to a multi-variate continuous state and observation setting has not been approached for the curse of dimensionality problem. In assuming a continuous observation setting, the agent must search for all possible observations that are read from the environment. This can quickly become infeasible even for small problem sizes. 
+Partially-observable Markov decision processes (POMDPs) are a powerful
+modeling formalism for real-world sequential decision-making
+problems~\cite{kaebling}.  In recent years, point-based value
+iteration methods~\cite{pbvi_jair06,hsvi2,Perseus} have proved
+extremely successful at scaling (approximately) optimal POMDP
+solutions to large state spaces when a set of initial belief states is
+known.
 
-In this paper we provide an exact solution to a subset of POMDPs with continuous states and observations. Our symbolic dynamic programming (SDP) approach assumes discrete noise and piecewise linear dynamics and functions. We formulize our problems using a Discrete and Continuous POMDP (DC-POMDP) model and apply our SDP algorithm. The main problem that rises in any problem modeled using DC-POMDP is the definition of different observation partitions and their probability. We apply symbolic solutions such as integration and maximization to provide an optimal closed-form solution to our problem domains. 
-As an example we consider the following power plant example which has mainly been solved in the literature using discrete sets of states and observations~\cite{steam2}. We use the example throughout the paper to help better understand the definitions. 
+More recent work has extended point-based methods to both continuous
+state and continuous observation spaces, but no work has tackled both
+jointly without sampling.  \cite{Perseus_cont} provides exact
+point-based backups for continuous state and discrete observation
+problems (with approximate sample-based extensions to continuous
+actions and observations), while~\cite{pascal_ijcai05} provides exact
+point-based backups for discrete state and continuous observation
+problems (where multivariate observations must be independent).  While
+restricted to discrete state, \cite{pascal_ijcai05} provides an
+important insight that we exploit in this work: \emph{only a finite
+number of partitionings of the observation space are required to
+distinguish between the optimal conditional policy over a finite set
+of belief states}.
 
-\textbf{Example} \textsc{(Power Plant)}
-\emph{The steam generation system of a power plant aims to provide hot steam to the steam turbine which in turn produces electricity. Feed-water is exposed to heat in the tubes leading to the water tank . Evaporating the water is performed under specific pressure and temperature inside the attached water tubes. 
-Mixing water and steam pressures makes reading tank levels and temperatures very hard and uncertain. For this reason, the process is modeled using POMDP in the literature. The temperature $t_s \in \mathbb{R}$ is modelled as a continuous state variable. Noisy observation of the temperature $t_o \in \mathbb{R}$ is used to help decide the optimal action to either open or close the pressure valve $a \in \{open,close\}$.}
+Our contributions in this work are two-fold.  First, we extend
+symbolic dynamic programming for continuous state
+MDPs~\cite{sanner_uai11} to the case of continuous state and discrete
+observation POMDPs.  This provides an expressive and concrete
+instantiation of the framework in~\cite{Perseus_cont} (which only
+abstractly required that integrals were computable) in that it ensures
+the closed-form of all $\alpha$-functions for \emph{all horizons} is a
+symbolic piecewise case statement, even for POMDPs with
+\emph{arbitrary} continuous rewards and transitions with discrete
+noise (i.e., a finite mixture of deterministic transitions).  
+Second, we extend this symbolic dynamic programming algorithm
+to the case of continuous observations (while restricting the
+transition and reward functions to piecewise polynomials) and extend
+the work of~\cite{pascal_ijcai05} to \emph{derive} relevant observation
+partitions for potentially correlated multivariate continuous
+observation spaces by exploiting the piecewise polynomial integration
+operation of~\cite{sanner_aaai12} and the multivariate symbolic maximization
+technique of~\cite{sanner_uai11}.  
+We demonstrate
+proof-of-concept results on uni- and multi-variate state and
+observation steam plant control showing the tractability of our
+exact symbolic dynamic programming point-based approach.
 
-We need to extend the basic SDP framework from \cite{sanner_uai11} by adding continuous observations to the model. The solution to a closed-form value function is similar to the algorithm from \cite{monahan82} apart from the fact that no explicit observation is defined in the continuous case. We redefine the value-iteration algorithm using case representations that are implemented using Extended Algebric decision diagrams (XADD) and provide an efficient automatic way to partition the entire observation space into piecewise linear functions where each partition has a relative probability. We use the univariate \textsc{Power Plant} example to define the main operations and algorithms and also provide empirical results for a multi-variate version of the problem. 
+%\footnote{All code for these
+%experiments is freely available online (link suppressed) and
+%attached as anonymized supplementary material to this submission.}
+
+%We proceed as follows: after reviewing POMDPs, we discuss the need for 
+%first-order POMDPs, formalize them, and provide a lifted solution
+%via symbolic dynamic programming (SDP).  We empirically show the
+%complexity of SDP is invariant to domain size while enumerated
+%state POMDP solvers have complexity exponential in the domain size.
 
 \section{DC-POMDP Model} 
-%%%% no need to define DC-MDP
-We assume familiarity with MDPs and introduce Discrete and Continuous Partially Observable MDPs as an extension to Discrete and Continuous State MDPs ~\cite{sanner_uai11}. A Discrete and Continuous partially observable MDP (DC-POMDP) is a tuple $\langle
-\mathcal{S},\mathcal{A},\mathcal{O},\mathcal{T},\mathcal{R},\mathcal{Z},\gamma,h \rangle$. 
-States are represented by vectors of $(\vec{d_s},\vec{x_s}) = ( d_{s_1},\ldots,d_{s_n},x_{s_1},\ldots,x_{s_m} )$ where each $d_{s_i} \in \{ 0,1 \}$ ($1 \leq i \leq n$) is a discrete boolean and each $x_{s_j} \in  \mathbb{R}$ ($1 \leq j \leq m$) is a continuous variable. Actions are presented by a finite set of actions $\{ a_1, \ldots, a_p \}$. We define discrete and continuous observations by the vector $(\vec{d_o},\vec{x_o}) = ( d_{o_1},\ldots,d_{o_n},x_{o_1},\ldots,x_{o_m} )$ where each $d_{o_i} \in \{ 0,1 \}$ ($1 \leq i \leq n$) is boolean and each $x_{o_j} \in \mathcal{R}$ ($1 \leq j \leq m$) is a continuous variable. 
 
-Three functions are required for modeling DC-POMDPs: (1) $\mathcal{T}: \mathcal{S} \times \mathcal{A} \times \mathcal{S} \rightarrow  [ 0, 1 ]$ a Markovian transition model defined as the probability of the next state given the action and previous state %$P(\vec{d}',\vec{x}'|\cdots,a)$
-; (2)  $\mathcal{R}:\mathcal{S}\times\mathcal{A} \rightarrow \mathbb{R}$ a reward function which returns the immediate reward of taking an action in some state and (3) an observation function defined as $\mathcal{Z} : \mathcal{S} \times \mathcal{A} \times \mathcal{O} \rightarrow [ 0, 1 ]$  which gives the probability of an observation given the outcome of a state after executing an action.  A discount factor $\gamma, \; 0 \leq \gamma \leq 1$ is included in the model to account for future rewards in higher horizons.
+We assume familiarity with MDPs and introduce discrete and continuous
+partially observable MDPs (DC-POMDPs) as an extension to their DC-MDP
+subset~\cite{sanner_uai11}.  A DC-POMDP is a tuple $\langle
+\mathcal{S},\mathcal{A},\mathcal{O},\mathcal{T},\mathcal{R},\mathcal{Z},\gamma,h
+\rangle$.  States $\mathcal{S}$ are represented by vectors of
+$(\vec{d_s},\vec{x_s}) = (
+d_{s_1},\ldots,d_{s_n},x_{s_1},\ldots,x_{s_m} )$ where each $d_{s_i}
+\in \{ 0,1 \}$ ($1 \leq i \leq n$) is a discrete boolean and each
+$x_{s_j} \in \mathbb{R}$ ($1 \leq j \leq m$) is a continuous variable.
+We assume a finite, discrete action space $\mathcal{A} = \{ a_1,
+\ldots, a_p \}$. Observations
+$\mathcal{O}$ are given by the vector $(\vec{d_o},\vec{x_o}) = (
+d_{o_1},\ldots,d_{o_p},x_{o_1},\ldots,x_{o_q} )$ where each $d_{o_i}
+\in \{ 0,1 \}$ ($1 \leq i \leq p$) is boolean and each $x_{o_j} \in
+\mathbb{R}$ ($1 \leq j \leq q$) is continuous.
 
-%%%% forms of transition, observation and reward function
-To define the transition and observation function, we use the fact that the state variables of this POMDP can be factored into a Dynamic Bayesian Network (DBN). Not allowing synchronic arcs between the discrete and continuous variables defines their joint transition or observation to be independent: 
-%{\footnotesize
-%\begin{equation}
-%P(\vec{d_s}',\vec{x_s}'|\vec{d_s},\vec{x_s},a) = 
-%\prod_{i=1}^n P(d_{s_i}'|\vec{d_s},\vec{x_s},a) \prod_{j=1}^m P(x_{s_j}'|\vec{d_s},\vec{d_s}',\vec{x_s},a). \nonumber 
-%\end{equation}}
-%The joint observation function can also be defined considering the direct correspondence between the state and observation variables:
+Three functions are required for modeling DC-POMDPs: (1) $\mathcal{T}: \mathcal{S} \times \mathcal{A} \times \mathcal{S} \rightarrow  [ 0, 1 ]$ a Markovian transition model defined as the probability of the next state given the action and previous state%$P(\vec{d}',\vec{x}'|\cdots,a)$
+; (2)  $\mathcal{R}:\mathcal{S}\times\mathcal{A} \rightarrow \mathbb{R}$ a reward function which returns the immediate reward of taking an action in some state; and (3) an observation function defined as $\mathcal{Z} : \mathcal{S} \times \mathcal{A} \times \mathcal{O} \rightarrow [ 0, 1 ]$  which gives the probability of an observation given the outcome of a state after executing an action.  A discount factor $\gamma, \; 0 \leq \gamma \leq 1$ is used to discount rewards $t$ time steps into the future by $\gamma^t$.
+
+We use a dynamic Bayesian network (DBN) to compactly represent the transition model over the factored state variables and we likewise use a Bayesian network to represent the observation model:
 {\footnotesize
-\begin{equation}
+\begin{align*}
+\mathcal{T}: \;\; &
+P(\vec{d_s}',\vec{x_s}'|\vec{d_s},\vec{x_s},a) = 
+\prod_{i=1}^n P(d_{s_i}'|\vec{d_s},\vec{x_s},a) \prod_{j=1}^m P(x_{s_j}'|\vec{d_s},\vec{d_s}',\vec{x_s},a). \nonumber \\
+\mathcal{Z}: \;\; & 
 P(\vec{d_o},\vec{x_o}|\vec{d_s},\vec{x_s},a) = 
 \prod_{i=1}^n P(d_{o_i}|d_{s_i},a) \prod_{j=1}^m P(x_{o_j}|x_{s_j},a). \nonumber 
-\end{equation}}
-\emph{Binary} variables are represented using conditional probability functions (CPF) in the form of $P(d_i'|\vec{d},\vec{x},a)$. \emph{Continuous} variables
-$P(x_j'|\vec{d},\vec{d'},\vec{x},a)$ are represented by \emph{piecewise
-linear equations} (PLEs) that are first-order Markov and deterministic, i.e. the probabilities are encoded using the Dirac $\delta[\cdot]$ function. The reward function $R(\vec{d},\vec{x},a)$ is set to be any general piecewise linear  function that could facilitate pruning for space efficiency.% via bilinear solvers. 
+\end{align*}}
+For simplicity of algorithmic exposition, we do not allow synchronic
+arcs in the transition representation, but note that to incorporate
+such arcs only requires restrictions on the variable elimination
+ordering during dynamic programming.  In these Bayes nets, 
+probabilities over 
+\emph{discrete} variables are represented using conditional probability
+functions (CPF) in the form of
+$P(d_i'|\vec{d},\vec{x},a)$. Probabilities for \emph{continuous} variables
+$P(x_j'|\vec{d},\vec{d'},\vec{x},a)$ are represented by
+\emph{piecewise functions} (PWFs) that are first-order Markov
+and deterministic, i.e. the probabilities are encoded using the Dirac
+$\delta[\cdot]$ function. The reward function $R(\vec{d},\vec{x},a)$
+is set to be any general piecewise function.  We next provide an intuitive
+example to make this DC-POMDP framework more concrete.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Figure 1 - policy tree
 \begin{figure}[t!]
@@ -133,36 +214,50 @@ branch is dashed.}
 %branch is dashed.} 
 %\end{figure}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\textbf{Example} \textsc{(Power Plant)~\cite{steam2}} \emph{The steam
+generation system of a power plant aims to provide hot steam to the
+steam turbine which in turn produces electricity. Feed-water is
+exposed to heat in the tubes leading to the water tank, where water
+evaporation is performed under specific pressure and temperature.
+A reward is obtained when electricity is generated through steam
+production and the pressure and temperature are within safe ranges.
+Mixing water and steam makes the
+respective pressure and temperature observations $p_o \in \mathbb{R}$
+and $t_o \in \mathbb{R}$ on the underlying state $p_s \in \mathbb{R}$
+and $t_s \in \mathbb{R}$ highly uncertain.  Action choices are either
+to open or close a presure valve $a \in \{ \open, \close \}$.}
+
 For the \textsc{Power Plant} example, the transition and reward functions are defined as below:
 % For the transition probability, we use the Dirac function to model the deterministic equations. We can also define stochasticity in the transition model using boolean random variables that are sampled stochastically.  The reward function can be any linear function of the state or action. Going above a threshold temperature (e.g. $T=10$) will cause an explosion in the plant when trying to close the valve which results in the negative reward of $-1000$. Staying below this temperature is safe and will produce electricity an gain the reward of $100$. The reward of an open valve is $-1$.
 {\footnotesize
 \begin{align}
 P(t_s'|\vec{t_s},a)= \delta\left[ t_s' - 
 \begin{cases}
- (a=open) &: t_s - 5 \\ 
-(a \neq open) &: t_s + 7 \\
+ (a=\open) &: t_s - 5 \\ 
+(a \neq \open) &: t_s + 7 \\
 \end{cases}
 \right]\nonumber
 \hspace{5mm}
 R(t_s,a) = 
 \begin{cases}
- (a=open) &: -1 \\
-(a \neq open)\wedge (t_s>T) &: -1000 \\
-(a \neq open)\wedge \neg(t_s>T) &: 100 \\
+ (a=\open) &: -1 \\
+(a \neq \open)\wedge (t_s>T) &: -1000 \\
+(a \neq \open)\wedge \neg(t_s>T) &: 100 \\
 \end{cases}\nonumber
 \end{align}
 }
 %contribution? 
-This example will try to maximize its reward using observations on the temperature. The observations received before closing the plant to a safe temperature are therefore critical.  For the observation model we begin with a discrete model for two observations $t_{o_1},t_{o_2}$ such as the following for the $open$ action:  
+This example will try to maximize its reward using observations on the temperature. The observations received before closing the plant to a safe temperature are therefore critical.  For the observation model we begin with a discrete model for two observations $t_{o_1},t_{o_2}$ such as the following for the $\open$ action:  
 {\footnotesize
 \begin{align}
-P(t_{o_1}|t_s',open) = 
+P(t_{o_1}|t_s',\open) = 
 \begin{cases}
  \delta\left[ t_s <= 15 \right] &: 0.9 \\
  \delta\left[ \neg (t_s <= 15)\right] &: 0.1 \\
 \end{cases}\nonumber
 \hspace{5mm}
-P(t_{o_2}|t_s',open) = 
+P(t_{o_2}|t_s',\open) = 
 \begin{cases}
  \delta\left[ t_s <= 15 \right] &: 0.1 \\
  \delta\left[ \neg (t_s <= 15)\right] &: 0.9 \\
@@ -170,13 +265,13 @@ P(t_{o_2}|t_s',open) =
 \end{align}
 }
 %\\
-%P(t_{o_1}|t_s',close) = 
+%P(t_{o_1}|t_s',\close) = 
 %\begin{cases}
 % \delta\left[ t_s <= 15 \right] &: 0.1 \\
 % \delta\left[ \neg (t_s <= 15)\right] &: 0.8 \\
 %\end{cases}\nonumber
 %,
-%P(t_{o_2}|t_s',close) = 
+%P(t_{o_2}|t_s',\close) = 
 %\begin{cases}
 % \delta\left[ t_s <= 15 \right] &: 0.9 \\
 % \delta\left[ \neg (t_s <= 15)\right] &: 0.2 \\
@@ -185,7 +280,7 @@ P(t_{o_2}|t_s',open) =
 After defining the solution to the discrete observation with a continuous state DC-POMDP, we can extend this to consider continuous observations using a continuous uniform noise distribution which is more realistic in many domains. %For a certain interval, the probability is a fixed number, while it is zero elsewhere. The integral of the uniform distribution should sum to one. 
 {\footnotesize
 \begin{align}
-P(t_o|t_s',open) = 
+P(t_o|t_s',\open) = 
 \begin{cases}
  (t_o>t_s-5) \wedge (t_o<t_s+5) &: 0.1 \\
  \neg((t_o>t_s-5) \wedge (t_o<t_s+5)) &: 0 \\
@@ -454,8 +549,8 @@ Given an initial set of beliefs, we can compute the relevant observation partiti
 Note that if the input to this algorithm is continuous observations $ContObs=true$ then line 8 finds the relevant observation partitions, else discrete observations are assumed and their probabilities are given in the problem specifications. Also a belief is given as the input and often several beliefs are required to cover the belief space and thus the algorithm is executed for each one of $b_i \in \mathbb{B}$.
 
 For each iteration, the $\alpha$-vector set are case functions that can be primed (line 11--12). 
-%For $h=0$, $V^0$ is given in line 2.  For $h=1$ we choose an action, for example $close$ to start with. The $\alpha$-vector set from $h=0$ is empty so line 7--8 of generating the relevant observation partitions is empty. Also priming the vectors and obtaining the product of relevant observations and the backup is an empty set. In line 15 the reward $R(s,close)$ is added to obtain $\alpha^1_{1,close}$ as defined by (8). The same operation is repeated for the $open$ action where $R(s,open)=-1$. Line 16 defines the final $\Gamma$-set: 
-%$\Gamma^1 = \{ \alpha^1_{1,open}, \alpha^1_{1,close} \}$.
+%For $h=0$, $V^0$ is given in line 2.  For $h=1$ we choose an action, for example $\close$ to start with. The $\alpha$-vector set from $h=0$ is empty so line 7--8 of generating the relevant observation partitions is empty. Also priming the vectors and obtaining the product of relevant observations and the backup is an empty set. In line 15 the reward $R(s,\close)$ is added to obtain $\alpha^1_{1,\close}$ as defined by (8). The same operation is repeated for the $\open$ action where $R(s,\open)=-1$. Line 16 defines the final $\Gamma$-set: 
+%$\Gamma^1 = \{ \alpha^1_{1,\open}, \alpha^1_{1,\close} \}$.
 The \texttt{Backup} algorithm in line 13 takes the primed version of the variables and performs regression on the $\alpha$-vectors. 
 \emph{Boolean restriction} is defined where $f|_{b=v}$ restricts a boolean variable $b$ occurring in $f$ to values $v \in \{ 0,1 \}$. This can be done by simply appending $b=v$ to each case partition (logical $\wedge$ of $b=v$ and the logical first-order formulas of $f$). 
 
@@ -463,7 +558,7 @@ The \texttt{Backup} algorithm in line 13 takes the primed version of the variabl
 $x_{s_j}'$.  A symbolic substitution is defined for this integration such that any occurrence of $x_{s_j}'$ in $f(x_{s_j}')$ is substituted with $h(\vec{z})$: 
 $\int f(x_{s_j}') \otimes \delta[x_{s_j}' - h(\vec{z})] dx_{s_j}' = f(x'_j) \{ x_{s_j}' / h(\vec{z}) \}$
 
-%For $h=2$, for each of the discrete actions, first we generate the probability of the relevant set of observations in the \texttt{GenRelObs} algorithm. This has been done for the $close$ action in the next section and we use the results here. 
+%For $h=2$, for each of the discrete actions, first we generate the probability of the relevant set of observations in the \texttt{GenRelObs} algorithm. This has been done for the $\close$ action in the next section and we use the results here. 
 %\begin{align}
 %P(z_k)=
 %\begin{cases}
@@ -477,75 +572,75 @@ $\int f(x_{s_j}') \otimes \delta[x_{s_j}' - h(\vec{z})] dx_{s_j}' = f(x'_j) \{ x
 Line 13 produces the backup $\alpha$-vector and multiplies it by the weight derived from the relevant observation partition in the continuous case or observation probabilities in the problem description. 
 %For each observation, two vectors are formed for each corresponding $\alpha$-vector. For example line 13 for the observation partitions above and $\alpha_1^1,\alpha_2^1$ is defined as:
 %\begin{align*}
-%\Gamma_{close,z_1,1}^2= 
+%\Gamma_{\close,z_1,1}^2= 
 %\begin{cases} 
 %(t_s'>15) &: -600 \\ 
 %\neg(t_s'>15) &: 60 \\
 %\end{cases}
 %\hspace{15mm} 
-%\Gamma_{close,z_1,2}^2= \top &:-0.6
+%\Gamma_{\close,z_1,2}^2= \top &:-0.6
 %\\
-%\Gamma_{close,z_2,1}^2= 
+%\Gamma_{\close,z_2,1}^2= 
 %\begin{cases}
 %(t_s'>15) &: -199.999 \\ 
 %\neg(t_s'>15) &: 19.999 
 %\end{cases}
 %\hspace{12mm} 
-%\Gamma_{close,z_2,2}^2= \top &:-0.1999
+%\Gamma_{\close,z_2,2}^2= \top &:-0.1999
 %\\
-%\Gamma_{close,z_3,1}^2= 
+%\Gamma_{\close,z_3,1}^2= 
 %\begin{cases}
 %(t_s'>15) &: -200 \\ 
 %\neg(t_s'>15) &: 20 
 %\end{cases}
 %\hspace{15mm} 
-%\Gamma_{close,z_3,2}^2= \top &:-0.2
+%\Gamma_{\close,z_3,2}^2= \top &:-0.2
 %\end{align*}
 Line 14 takes the cross-sum of the two sets which takes every possible combination of observations according to the $\alpha$-vectors. 
 %\begin{align*}
-%\Gamma_{close,1}^2 &= 
+%\Gamma_{\close,1}^2 &= 
 %\begin{cases} 
 %(t_s'>15) &: -800.2 \\ 
 %\neg(t_s'>15) &: 79.8 \\
 %\end{cases}
 %\hspace{10mm} 
-%\Gamma_{close,2}^2= 
+%\Gamma_{\close,2}^2= 
 %\begin{cases} 
 %(t_s'>15) &: -1000 \\ 
 %\neg(t_s'>15) &: 100 \\
 %\end{cases}
 %\\
-%\Gamma_{close,3}^2&= 
+%\Gamma_{\close,3}^2&= 
 %\begin{cases} 
 %(t_s'>15) &: -800.2 \\ 
 %\neg(t_s'>15) &: 79.8 \\
 %\end{cases}
 %\hspace{10mm}
-%\Gamma_{close,4}^2= 
+%\Gamma_{\close,4}^2= 
 %\begin{cases} 
 %(t_s'>15) &: -600.4 \\ 
 %\neg(t_s'>15) &: 59.6 \\
 %\end{cases}
 %\\
-%\Gamma_{close,5}^2&= 
+%\Gamma_{\close,5}^2&= 
 %\begin{cases} 
 %(t_s'>15) &: -400.5999 \\ 
 %\neg(t_s'>15) &: 39.3999 \\
 %\end{cases}
 %\hspace{5mm} 
-%\Gamma_{close,6}^2= 
+%\Gamma_{\close,6}^2= 
 %\begin{cases} 
 %(t_s'>15) &: -200.7999 \\ 
 %\neg(t_s'>15) &: 19.999 \\
 %\end{cases}
 %\\
-%\Gamma_{close,7}^2&= 
+%\Gamma_{\close,7}^2&= 
 %\begin{cases} 
 %(t_s'>15) &: -200.8 \\ 
 %\neg(t_s'>15) &: 19.2 \\
 %\end{cases}
 %\hspace{10mm} 
-%\Gamma_{close,8}^2= \top:-1
+%\Gamma_{\close,8}^2= \top:-1
 %\end{align*}
 All vectors are multiplied by the discount $\gamma$ and added with the reward in line 15 where the addition is an augmented $\oplus$ for adding each vector with the reward function. 
 % need to add this?
@@ -723,7 +818,7 @@ For the belief $b_1: U[t_s;2,6]$ the two vectors above the resulting $\delta$-fu
 \vspace{-4mm}
 \end{figure*}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-The observation dependent $\delta$-functions divide the observation space into regions which can yield the optimal policy according to the belief state $b_1$. According to continuous observation space defined in \cite{pascalPomdp}, for a 1-dimensional observation space with two or more functions of the observation, we need to find the optimal boundaries or partitions of the space. In this work, numerical solutions are proposed to find the roots of any two observation dependant function. Here we use the symbolic power of the max-operator to find all the maximum boundary regions of two or more $\delta$-functions at the same time. For the two $\delta$-functions above the following partitions of the observation space is derived after taking their maximuum: 
+The observation dependent $\delta$-functions divide the observation space into regions which can yield the optimal policy according to the belief state $b_1$. According to continuous observation space defined in \cite{pascal_ijcai05}, for a 1-dimensional observation space with two or more functions of the observation, we need to find the optimal boundaries or partitions of the space. In this work, numerical solutions are proposed to find the roots of any two observation dependant function. Here we use the symbolic power of the max-operator to find all the maximum boundary regions of two or more $\delta$-functions at the same time. For the two $\delta$-functions above the following partitions of the observation space is derived after taking their maximuum: 
 {\footnotesize
 \begin{align}
 \mathrm{max} \Bigg(\delta_{1}(o),\delta_{1}(o)\Bigg) &= 
@@ -878,12 +973,12 @@ In Figure ~\ref{fig:3D}  we present plots of the value function for different it
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 \section{Related Work and Conclusion} 
-This work has used the concept of continuous states and the SDP solution to MDPs from ~\cite{sanner_uai11} and continuous observations from the work of \cite{pascalPomdp}. It is exclusive in the sense that it brings together the continuous state and observation POMDPs using a symbolic approach. 
+This work has used the concept of continuous states and the SDP solution to MDPs from ~\cite{sanner_uai11} and continuous observations from the work of \cite{pascal_ijcai05}. It is exclusive in the sense that it brings together the continuous state and observation POMDPs using a symbolic approach. 
 In many applications of the POMDP framework, the state and observation space have been considered as discrete values such as ~\cite{steam2} here we avoid this general simplification and work with the real values from sensors.
 %sampling, monte carlo, particle filter, gaussians, perseus, pergeus
 
-There has been prior work on approximate solutions to POMDPs with large or continuous state spaces ~\cite{Thrun99h}, ~\cite{Perseus} and some has been extended to the continuous observation setting using methods such as sampling ~\cite{PerseusObs}.
-In most approximate continuous state POMDP work, continuous or large discrete actions has been used. Thus we can extend the current work using \cite{zamaniAAAI} to contain continuous actions and provide exact or approximate solutions. 
+There has been prior work on approximate solutions to POMDPs with large or continuous state spaces ~\cite{Thrun99h}, ~\cite{Perseus} and some has been extended to the continuous observation setting using methods such as sampling ~\cite{Perseus_cont}.
+In most approximate continuous state POMDP work, continuous or large discrete actions has been used. Thus we can extend the current work using \cite{zamani_aaai12} to contain continuous actions and provide exact or approximate solutions. 
 
 %\section{Conclusion}
 We presented the first exact solution to continuous states and observations in a DC-POMDP framework. Transitions and reward functions are defined as piecewise linear functions of the continuous states. Continuous observations require definition of explicit partitions based on the observation model and the belief state of the agent. The key contribution is to define the partitions on the observation space and derive the related probabilities using symbolic integration and maximization. We extend the application to more than one state-observation setting and present the results.  
