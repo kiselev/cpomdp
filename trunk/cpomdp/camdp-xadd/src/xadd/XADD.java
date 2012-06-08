@@ -2766,7 +2766,7 @@ public class XADD {
 				if (integration_var_count > 1)
 				{
 					System.out.println("removeIntegrationVarTerm: integration var '"+ _integrationVar+ "' must appear linearly in constraint '"	+ expr + "'");
-					System.exit(1);
+					//System.exit(1);
 				}
 				// If get here only coef*_integrationVar
 				_integrationVarCoef += coef;
