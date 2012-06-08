@@ -1,0 +1,37 @@
+cvariables (x1)
+min-values (0)
+max-values (100) 
+bvariables ()
+nvariables (n)
+ivariables ( )
+
+action inc
+    x1' ( [x1 + 10 + n])
+
+noise
+n ([T(x1,10,1,0)])
+
+reward 
+    ( [x1 <= 45]
+            ( [x1>35]
+            ( [10] ) 
+            (0))
+         ([0]))
+endaction
+
+action dec
+    x1' ( [-10 +x1 +n] )
+    
+noise
+n ([T(x1,10,5,5)])
+
+reward 
+    ( [x1 <= 25]
+            ( [x1>20]
+            ( [10] ) 
+            (0))
+         ([0]))
+endaction
+
+discount 1.000000
+iterations 10
