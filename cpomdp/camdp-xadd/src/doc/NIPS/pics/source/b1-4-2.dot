@@ -1,0 +1,96 @@
+digraph G {
+  graph [
+    ranksep = "2.00",
+    bb = "0,0,723,598",
+    ratio = auto,
+    fontsize = 16,
+    fontname = Helvetica,
+    size = "7.5,10"
+  ];
+
+  node [
+    fontsize = 16
+  ];
+
+  7083 [
+    height = "0.51069",
+    label = "(-13 + (1 * t)) <= 0",
+    fillcolor = lightblue,
+    width = "2.6788",
+    style = filled,
+    pos = "256,199"
+  ];
+  7082 [
+    shape = box,
+    label = "254",
+    fillcolor = lightsalmon,
+    width = "2.2292",
+    style = filled,
+    pos = "265,18"
+  ];
+  7081 [
+    shape = box,
+    label = "-1464.75",
+    fillcolor = lightsalmon,
+    width = "2.3056",
+    style = filled,
+    pos = "83,18"
+  ];
+  7080 [
+    height = "0.51069",
+    label = "(-13 + (1 * t)) <= 0",
+    fillcolor = lightblue,
+    width = "2.6788",
+    style = filled,
+    pos = "468,199"
+  ];
+  
+  7079 [
+    shape = box,
+    label = "-845.9",
+    fillcolor = lightsalmon,
+    width = "2.1944",
+    style = filled,
+    pos = "460,18"
+  ];
+  7078 [
+    shape = box,
+    label = "-2564.75",
+    fillcolor = lightsalmon,
+    width = "2.3056",
+    style = filled,
+    pos = "640,18"
+  ];
+  7084 [
+    height = "0.51069",
+    label = "(-10 + (1 * t)) <= 0",
+    fillcolor = lightblue,
+    width = "2.6788",
+    style = filled,
+    pos = "362,480"
+  ];
+  7080 -> 7078 [
+    style = dashed,
+    pos = "e,623.56,36.111 484.49,180.84 515.19,148.89 581.16,80.236 616.5,43.452"
+  ];
+  7084 -> 7083 [
+    style = "",
+    pos = "e,262.63,217.45 355.37,461.55 337.41,414.28 287.74,283.54 266.19,226.83"
+  ];
+  7080 -> 7079 [
+    style = "",
+    pos = "e,460.76,36.035 467.22,180.51 465.82,149.2 462.88,83.39 461.21,46.163"
+  ];
+  7083 -> 7082 [
+    style = "",
+    pos = "e,264.14,36.035 256.88,180.51 258.45,149.2 261.76,83.39 263.63,46.163"
+  ];
+  7084 -> 7080 [
+    style = dashed,
+    pos = "e,461.37,217.45 368.63,461.55 386.59,414.28 436.26,283.54 457.81,226.83"
+  ];
+  7083 -> 7081 [
+    style = dashed,
+    pos = "e,99.538,36.111 239.41,180.84 208.54,148.89 142.18,80.236 106.63,43.452"
+  ];
+}
