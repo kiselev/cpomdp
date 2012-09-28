@@ -123,7 +123,7 @@ public class DiscreteObsGamma {
 			for (int j=0;j<newalphas.size();j++)
 			{
 				regressedAlpha[i][j] = _context.apply(newalphas.get(j), obs.getValue(), _context.PROD);
-				regressedAlpha[i][j] = _context.reduceLP(regressedAlpha[i][j] , _pomdp._alContSVars);
+				regressedAlpha[i][j] = _context.reduceLP(regressedAlpha[i][j] );
 			}
 			i++;
 		}

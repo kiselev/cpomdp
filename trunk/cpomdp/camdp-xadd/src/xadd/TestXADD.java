@@ -16,7 +16,7 @@ import xadd.XADD.DoubleExpr;
 import xadd.XADD.ExprDec;
 import xadd.XADD.VarExpr;
 import xadd.XADD.XADDINode;
-import xadd.XADD.XADDLeafMax;
+import xadd.XADD.XADDLeafMaxMin;
 import xadd.XADD.XADDTNode;
 import cmdp.HierarchicalParser;
 
@@ -45,12 +45,13 @@ public class TestXADD {
 		XADD xadd_context = new XADD();
 		
 		//////////////////////
-		int ixadd = TestBuild(xadd_context, "./src/xadd/test7.xadd");
+		int ixadd = TestBuild(xadd_context, "./src/xadd/test12indirect.xadd");
 		
 		Graph g1 = xadd_context.getGraph(ixadd);
 		g1.launchViewer();
 		
-		int reduce = xadd_context.reduceLP(ixadd,Arrays.asList("x"));
+		int reduce = xadd_context.reduceLP(ixadd);
+		reduce = xadd_context.reduceLP(reduce,true);
 		g1 = xadd_context.getGraph(reduce);
 		g1.launchViewer();
 		//ixadd  = xadd_context.reduceProcessXADDLeaf(ixadd, max, false);
@@ -227,24 +228,24 @@ public class TestXADD {
 		System.out.println(xadd_context.getString(xadd_circle));
 		System.out.println("-------------\n" + xadd_context.getString(y));
 
-		System.exit(1);
+		//System.exit(1);
 		xadd_context.getGraph(y).launchViewer();
 		System.out.println(xadd_context.getString(xadd_circle));
 
 		// Pause
-		System.in.read();
+		//System.in.read();
 
 		// *****************TESTING MAX***********
 		int xadd4 = TestBuild(xadd_context, "./src/xadd/test4.xadd");
 		int xadd5 = TestBuild(xadd_context, "./src/xadd/test5.xadd");
 		int xaddrRes = xadd_context.apply(xadd4, xadd5, XADD.MAX);
-		Graph gRes = xadd_context.getGraph(xadd_context.reduceLP(xaddrRes, Arrays.asList("x1", "x2", "r1")));
+		Graph gRes = xadd_context.getGraph(xadd_context.reduceLP(xaddrRes));
 		gRes.launchViewer();
 
 		int xadd_implied = TestBuild(xadd_context, "./src/xadd/implied.xadd");
 		Graph gb = xadd_context.getGraph(xadd_implied);
 		gb.launchViewer();
-		xadd_implied = xadd_context.reduceLP(xadd_implied, Arrays.asList("x1", "x2", "r1"));
+		xadd_implied = xadd_context.reduceLP(xadd_implied);
 		Graph gb2 = xadd_context.getGraph(xadd_implied);
 		gb2.launchViewer();
 		if (true)

@@ -2,18 +2,18 @@ cvariables (t)
 min-values (0)
 max-values (400)
 bvariables ()
-bovariables (bto)
+bovariables (bo)
 ovariables(to)
 
 action open
 
 t' ([t+50])
-bto' (bto
+bo' (bo
 		([0.8])
 		([0.2]))
 		
 observation
-to (bto
+to (bo
 	([1.1*t]) 
 	([1.4*t]) 
 	)
@@ -23,12 +23,12 @@ endaction
 action close
 
 t' ([-35 + t])
-bto' (bto
+bo' (bo
 		([0.9])
 		([0.1]))
 		
 observation
-to (bto
+to (bo
 	([t]) 
 	([1.5*t]) 
 	)

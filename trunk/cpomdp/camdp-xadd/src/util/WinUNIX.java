@@ -21,6 +21,7 @@ public class WinUNIX {
 	public static String GVIZ_CMD_CLOSE = null;
 	public static String GVIZ2_EXE = null;
 	public static String GVIZ2_CMD = null;
+	public static String SAT_EXE = null;
 	public static String GVIZ2_CMD_CLOSE = null;
 	
 	public static String USER_DIR = System.getProperty("user.dir");
@@ -36,21 +37,25 @@ public class WinUNIX {
 		
 		if (SYSTEM == WINDOWS) {
 			
+			System.out.println("WINDOWS");
 			GVIZ_EXE = "dot.exe -Tdot";
 			GVIZ_CMD = "CMD /C dot.exe -Tdot";
 			GVIZ_CMD_CLOSE = "";
 			GVIZ2_EXE = "neato.exe -Tdot";
 			GVIZ2_CMD = "CMD /C neato.exe -Tdot";
 			GVIZ2_CMD_CLOSE = "";
+			SAT_EXE = "minisat.exe";
 
 		} else if (SYSTEM == LINUX_LIKE) {
 			
+			System.out.println("LINUX");
 			GVIZ_EXE = "dot -Tdot";
 			GVIZ_CMD = "/bin/sh 'dot -Tdot";
 			GVIZ_CMD_CLOSE = "'";
 			GVIZ2_EXE = "neato -Tdot";
 			GVIZ2_CMD = "/bin/sh 'neato -Tdot";
 			GVIZ2_CMD_CLOSE = "'";
+			SAT_EXE = "MiniSat_v1.14_linux";
 
 		} else {
 			System.out.println("util.WinUNIX: Unrecognized OS.");
