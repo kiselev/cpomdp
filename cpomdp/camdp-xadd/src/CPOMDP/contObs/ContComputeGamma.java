@@ -174,7 +174,7 @@ public class ContComputeGamma {
 			for (int j=0;j<newalphas.size();j++)
 			{
 				regressedAlpha[i][j] = _context.apply(newalphas.get(j), dd, _context.PROD);
-				regressedAlpha[i][j] = _context.reduceLP(regressedAlpha[i][j] , _pomdp._alContSVars);
+				regressedAlpha[i][j] = _context.reduceLP(regressedAlpha[i][j]);
 			}
 		}
 		/*int crossSum1[] = new int[(int) Math.pow(newalphas.size(), _obspartitionset.size())];
@@ -395,7 +395,7 @@ public class ContComputeGamma {
 				if (afterInt>0) 
 					afterInt =_context.computeDefiniteIntegral(afterInt,_pomdp._alContSVars.get(j));
 				else afterInt =_context.computeDefiniteIntegral(beforeInt,_pomdp._alContSVars.get(j));
-				afterInt = _context.reduceLP(afterInt, _pomdp._alContAllVars);
+				afterInt = _context.reduceLP(afterInt);
 				//or assign a new array for delta's but no need to keep them
 			}
 			newAlphas.put(i, afterInt);
@@ -417,7 +417,7 @@ public class ContComputeGamma {
 		//4- compute probability of each case partition of max
 		partition = new ObsPartition();
 		partitionNo =0;
-		max = _context.reduceLP(max, _pomdp._alContAllVars);
+		max = _context.reduceLP(max);
 		reduceProbability(max,a,belief);
 	}
 	private int reduceProbability(int node_id,COAction a,int b) {
@@ -449,7 +449,7 @@ public class ContComputeGamma {
 			//}
 				for (int i=0;i<_pomdp._alContSVars.size();i++)
 					check = _context.computeDefiniteIntegral(check, _pomdp._alContSVars.get(i));
-				check = _context.reduceLP(check, _pomdp._alContAllVars);
+				check = _context.reduceLP(check);
 				//multiply indicator
 
 				for (Map.Entry<Decision, Boolean> me : partition.get_decisions().entrySet()) 
@@ -458,12 +458,13 @@ public class ContComputeGamma {
 					double low_val = me.getValue() ? 0d : 1d;
 					check = _context.apply(check,_context.getVarNode(me.getKey(), low_val, high_val), _context.PROD);
 				}
+				check = _context.reduceLP(check);
 				//integrate only this observation
 				//check = _context.computeDefiniteIntegral(check,(String)pair1.getKey());
 				for (int i=0;i<_pomdp._alContOVars.size();i++)
 				check = _context.computeDefiniteIntegral(check, _pomdp._alContOVars.get(i));
 				System.out.println("AFTER INTEGRATION CHECK: "+ check);
-				check = _context.reduceLP(check, _pomdp._alContAllVars);
+				check = _context.reduceLP(check);
 				XADDTNode t = (XADDTNode) _context.getNode(check);
 				partition.setProbability(((DoubleExpr) t._expr)._dConstVal);
 				if (partition.getProbability()>0 && partition.getProbability()<1)

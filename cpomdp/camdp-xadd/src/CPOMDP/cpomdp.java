@@ -130,7 +130,7 @@ public class cpomdp {
 		_alContOVars = new ArrayList<String>(Intern(parser.getOVars())); // Retain order given in MDP file
 		_alContAllVars = new ArrayList<String>(_alContSVars);
 		_alContAllVars.addAll(_alContOVars);
-		_context._hmContinuousVars = _alContAllVars;
+		//_context._hmContinuousVars = _alContAllVars;
 
 		
 		
@@ -180,7 +180,7 @@ public class cpomdp {
 		//define belief: 
 		//1 belief for now: 
 			ArrayList l0 =new ArrayList();
-				/*l0.add("[-6 + t*1 <= 0]");
+				l0.add("[-6 + t*1 <= 0]");
 				ArrayList l0t = new ArrayList();
 				ArrayList l0f = new ArrayList();
 				l0t.add("[-2 + t*1 >= 0]");
@@ -195,23 +195,23 @@ public class cpomdp {
 				l0.add(l0f);
 				
 				ArrayList l1 =new ArrayList();
-				l1.add("[-13 + t*1 <= 0]");
+				l1.add("[-11 + t*1 <= 0]");
 				ArrayList l1t = new ArrayList();
 				ArrayList l1f = new ArrayList();
-				l1t.add("[-8 + t*1 >= 0]");
+				l1t.add("[-6 + t*1 >= 0]");
 				ArrayList l1tt = new ArrayList();
 				ArrayList l1tf = new ArrayList();
 				l1tt.add("0.2");
 				l1tf.add("0");
-				l1t.add(l0tt);
-				l1t.add(l0tf);
+				l1t.add(l1tt);
+				l1t.add(l1tf);
 				l1f.add("0");
 				l1.add(l1t);
-				l1.add(l1f);*/
+				l1.add(l1f);
 				
 				
 				//for 2d:
-				ArrayList l1 =new ArrayList();
+		/*		ArrayList l1 =new ArrayList();
 				l0.add("[-10 + p*1 <= 0]");
 				ArrayList l0t = new ArrayList();
 				ArrayList l0f = new ArrayList();
@@ -262,7 +262,7 @@ public class cpomdp {
 				l1t.add(l1tf);
 				l1f.add("0");
 				l1.add(l1t);
-				l1.add(l1f);
+				l1.add(l1f);*/
 				
 				int b0 = _context.buildCanonicalXADD(l0);
 				belief[0] = b0;
@@ -341,7 +341,11 @@ public class cpomdp {
 						{
 							if (previousS>0)
 								alphaValue[j] = _context.computeDefiniteIntegral(previousS,_alContSVars.get(k));
-							else alphaValue[j] = _context.computeDefiniteIntegral(_context.apply(_currentgammaSet_h.get(j), belief[i], _context.PROD),_alContSVars.get(k));
+							else 
+								{
+								int r = _context.apply(_currentgammaSet_h.get(j), belief[i], _context.PROD);
+								alphaValue[j] = _context.computeDefiniteIntegral(r,_alContSVars.get(k));
+								}
 							previousS = alphaValue[j];
 						}
 							XADDTNode t = (XADDTNode) _context.getNode(alphaValue[j]);
@@ -368,7 +372,7 @@ public class cpomdp {
 			{
 				_currentgammaSet_h.put(j, beliefBasedVectors[j]);
 				doDisplay(_currentgammaSet_h.get(j), "Iteration:" + _nCurIter+"Alpha_vector for belief"+(j+1));
-				create3DDataFile(_currentgammaSet_h.get(j),"x1","x2"); //for refinement
+				//create3DDataFile(_currentgammaSet_h.get(j),"t","p"); //for refinement
 
 			}
 			//_logStream.println("- V^" + _nCurIter + _context.getString(_valueDD));
@@ -377,8 +381,8 @@ public class cpomdp {
 			//////////////////////////////////////////////////////////////////////////
 			// Value iteration statistics
 			time[_nCurIter] = GetElapsedTime();
-			num_nodes[_nCurIter] = _context.getNodeCount(_valueDD);
-			num_branches[_nCurIter] = _context.getBranchCount(_valueDD);
+			num_nodes[_nCurIter] = _context.getNodeCount(_currentgammaSet_h.get(0))+_context.getNodeCount(_currentgammaSet_h.get(1));
+			num_branches[_nCurIter] = _context.getBranchCount(_currentgammaSet_h.get(0))+_context.getNodeCount(_currentgammaSet_h.get(1));
 			_logStream.println("Value function size @ end of iteration " + _nCurIter + 
 					": " + num_nodes[_nCurIter] + " nodes = " + 
 					num_branches[_nCurIter] + " cases" + " in " + time[_nCurIter] + " ms");
@@ -569,7 +573,7 @@ public class cpomdp {
 		TestXADDDist.Plot3DXADD(_context, xadd_id, 
 				opt._varLB.get(0), opt._varInc.get(0), opt._varUB.get(0), 
 				opt._varLB.get(1), opt._varInc.get(1), opt._varUB.get(1), 
-				opt._bassign, opt._dassign, opt._var.get(0), opt._var.get(1), label);
+				opt._bassign, opt._dassign, opt._var.get(0), opt._var.get(1), label,_problemFile);
 	}
 	
 	public void create3DDataFile(Integer XDD, String xVar, String yVar) {
@@ -585,10 +589,10 @@ public class cpomdp {
              //values in order for rover, refinement,inventory
             Double minX,minY,maxX,maxY;
             Double size3D = 20.0;
-             minX= 0.0;//_camdp._context._hmMinVal.get(xVar);
-             maxX= 200.0;//_camdp._context._hmMaxVal.get(xVar);
+             minX= 70.0;//_camdp._context._hmMinVal.get(xVar);
+             maxX= 120.0;//_camdp._context._hmMaxVal.get(xVar);
              minY= 0.0;//_camdp._context._hmMinVal.get(yVar);
-             maxY= 60.0;//_camdp._context._hmMaxVal.get(yVar);
+             maxY= 40.0;//_camdp._context._hmMaxVal.get(yVar);
              
              Double incX= (maxX-minX)/(size3D-1);
              Double incY= (maxY-minY)/(size3D-1);

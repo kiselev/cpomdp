@@ -199,18 +199,22 @@ public class TestXADDDist {
 
 	public static void Plot3DXADD(XADD context, int xadd, double low_x,
 			double inc_x, double high_x, double low_y, double inc_y,
-			double high_y, String xVar, String yVar, String title) {
+			double high_y, String xVar, String yVar, String title,String filename) {
 
 		Plot3DXADD(context, xadd, low_x, inc_x, high_x, low_y, inc_y, high_y,
 				new HashMap<String, Boolean>(), new HashMap<String, Double>(),
-				xVar, yVar, title);
+				xVar, yVar, title,filename);
 	}
 
 	public static void Plot3DXADD(XADD context, int xadd, double low_x,
 			double inc_x, double high_x, double low_y, double inc_y,
 			double high_y, HashMap<String, Boolean> static_bvars,
 			HashMap<String, Double> static_dvars, String xVar, String yVar,
-			String title) {
+			String title,String filename) {
+		//print to file
+		try {
+ 		counter++;
+        BufferedWriter out = new BufferedWriter(new FileWriter(filename+counter+".txt"));
 
 		// Create a Simple 2D XY plot window.
 		ArrayList<Double> alX = new ArrayList<Double>();
@@ -237,7 +241,9 @@ public class TestXADDDist {
 				static_dvars.remove(yVar);
 
 				if (z > 0.1d)
-					System.out.println("f(" + x + "," + y + ") = " + z);
+				{
+					//System.out.println("f(" + x + "," + y + ") = " + z);
+				}
 				xArr[i][j] = x;
 				yArr[i][j] = y;
 				zArr[i][j] = z; //x + y; //z;
@@ -246,9 +252,14 @@ public class TestXADDDist {
 		for (int i=0;i<alY.size();i++)
 		{
 			for (int j=0;j<alX.size();j++)
-				System.out.print(" " + zArr[i][j]);
-			System.out.println();
+			{
+				//System.out.print(" " + zArr[i][j]);
+         		out.append(" " + zArr[i][j]);
+			}
+			//System.out.println();
+            out.newLine();
 		}
+        out.close();
 		//String title = "f(" + xVar + "," + yVar + ") @ " + static_bvars + " " + static_dvars;
 		Plot2D aPlot = new ContourPlot(xArr, yArr, zArr, 12, false, title, 
 				xVar, yVar, null, null);
@@ -281,6 +292,9 @@ public class TestXADDDist {
 		window.setLocation(100, 100);
 		window.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		window.show();
-	}
-
+	} catch (IOException e) {
+ 	System.out.println("Problem with the creation 3D file");
+ 	System.exit(0);
+		}
+}
 }

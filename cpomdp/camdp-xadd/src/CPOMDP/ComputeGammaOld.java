@@ -148,7 +148,7 @@ public class ComputeGammaOld {
 			for (int j=0;j<newalphas.size();j++)
 			{
 				regressedAlpha[i][j] = _context.apply(newalphas.get(j), nodeO, _context.PROD);
-				regressedAlpha[i][j] = _context.reduceLP(regressedAlpha[i][j] , _pomdp._alContSVars);
+				regressedAlpha[i][j] = _context.reduceLP(regressedAlpha[i][j] );
 			}
 		}
 		int crossSum[] = new int[(int) Math.pow(newalphas.size(), _obspartitionset.size())];

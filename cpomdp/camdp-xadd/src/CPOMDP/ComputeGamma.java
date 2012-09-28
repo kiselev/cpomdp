@@ -150,7 +150,7 @@ public class ComputeGamma {
 			for (int j=0;j<newalphas.size();j++)
 			{
 				regressedAlpha[i][j] = _context.apply(newalphas.get(j), nodeO, _context.PROD);
-				regressedAlpha[i][j] = _context.reduceLP(regressedAlpha[i][j] , _pomdp._alContSVars);
+				regressedAlpha[i][j] = _context.reduceLP(regressedAlpha[i][j] );
 			}
 		}
 		int crossSum[] = new int[(int) Math.pow(newalphas.size(), _obspartitionset.size())];
@@ -255,9 +255,11 @@ public class ComputeGamma {
 			 int result = _context.apply(xadd1.getValue(), xadd2.getValue(), _context.PROD);
 			 
 		}
+				XADDINode n = null;
 				if (n instanceof XADDINode)
 				{
 					int sp = ((XADDINode)n)._var;
+					XADDINode o = null;
 					int op = ((XADDINode)o)._var;
 					Decision d =  _context._alOrder.get(sp);
 					Decision od=  _context._alOrder.get(op);
@@ -290,6 +292,7 @@ public class ComputeGamma {
 							 negoeC._type = _context.LT_EQ;*/
 						int oo = overlapObservation(negoeC);
 						CompExpr negoeS = new CompExpr(e._expr._type, e._expr._lhs, e._expr._rhs);
+						int branch = 0;
 						if (branch==0) 
 							negoeS._type = negoeS.flipCompOper(negoeS._type);
 						if (oo != -1)
