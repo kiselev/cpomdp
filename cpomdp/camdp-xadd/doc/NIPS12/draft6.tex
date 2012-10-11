@@ -25,32 +25,27 @@
 \title{Symbolic Dynamic Programming for Continuous State and Observation POMDPs}
 
 
-\author{
-%Zahra Zamani \\
-%ANU & NICTA\\
-%Canberra, Australia \\
-%\texttt{zahra.zamani@anu.edu.au} \\
-%\And
-%Coauthor \\
-%Affiliation \\
-%Address \\
-%\texttt{email} \\
-%\AND
-%Coauthor \\
-%Affiliation \\
-%Address \\
-%\texttt{email} \\
-%\And
-%Coauthor \\
-%Affiliation \\
-%Address \\
-%\texttt{email} \\
-%\And
-%Coauthor \\
-%Affiliation \\
-%Address \\
-%\texttt{email} \\
-%(if needed)\\
+\author
+{
+Zahra Zamani \\
+NICTA & ANU\\
+Canberra, Australia \\
+\texttt{zahra.zamani@anu.edu.au} \\
+\And
+Scott Sanner \\
+NICTA & ANU\\
+Canberra, Australia \\
+\texttt{ssanner@nicta.com.au} \\
+\And
+Pascal Poupart \\
+University of Waterloo \\
+Waterloo, Canada \\
+\texttt{ppoupart@uwaterloo.ca} \\
+\And
+Kristian Kersting \\
+Fraunhofer IAIS, Sankt Augustin, Germany \\
+IGG, University of Bonn, Germany \\
+\texttt{kristian.kersting@iais.fraunhofer.de} \\
 }
 
 % The \author macro works with any number of authors. There are two commands
@@ -214,10 +209,10 @@ example to make this DC-POMDP framework more concrete.
 \begin{center}
 \includegraphics[width=0.4\textwidth]{pics/cond_plan2.pdf}
 \hspace{5mm}
-\includegraphics[width=0.45\textwidth]{pics/b1-4.pdf}
+\includegraphics[width=0.45\textwidth]{pics/dag2.pdf}
 \end{center}
 \vspace{-2mm}
-\caption{\footnotesize (left) Example conditional plan $\beta^h$ for discrete observations; (right) an example piecewise $\alpha$-vector for continuous state $t$ represented
+\caption{\footnotesize (left) Example conditional plan $\beta^h$ for discrete observations; (right) an example piecewise $\alpha$-vector for continuous state $x$ represented
 as a 
 %The maximum $\alpha$ vector for a belief state at iteration 4 for the \textsc{\bf Power Plant} problem in Section~\ref{}
 decision diagram: 
@@ -667,7 +662,7 @@ state space more and more finely.
 
 \Begin
 {
-	$Z:=0$ \;	
+	$O:=0$ \;	
 		\For {all $\alpha_j$ in  $\Gamma^{h-1}$}    
 		{
 		\emph{// Point-based backup operation}\\
@@ -681,15 +676,15 @@ state space more and more finely.
 		\For {all $j$ in $\delta_{j}(xd_o)$}    
 		{
 		\emph{// Generate partition points on the observation space}\\
-		$Z := max(\delta_j(xd_o),z)$\;
+		$O := max(\delta_j(xd_o),\delta_{j+1}(xd_o))$\;
     	}
-    	\emph{// $\phi_{z_k}$ logical term on each partition of $Z$}\\
+    	\emph{// $\phi_{o_k}$ logical term on each partition of $O$}\\
     	\emph{// Generate probabilities and partitions of observations that distinguish optimal $\alpha$-vector (conditional plan)}\\
-   		$P(Z=z_k|b_i) := \int_{x_s'} \int_{x_o} \int_{x_s} \bigoplus_{d_o} \bigoplus_{d_s} \bigoplus_{d_s'} P(xd_o|xd'_s,a)*P(xd'_s|xd_s,a)*b_i* \mathbb{I}[\phi_{z_k}] d_{xd_o} d_{xd_s}d_{xd_s'}$ \;
-    \Return{$P(z)$} \;
+   		$P(O=o_k|b_i) := \int_{x_s'} \int_{x_o} \int_{x_s} \bigoplus_{d_o} \bigoplus_{d_s} \bigoplus_{d_s'} P(xd_o|xd'_s,a)*P(xd'_s|xd_s,a)*b_i* \mathbb{I}[\phi_{o_k}] d_{x_o} d_{x_s}d_{x_s'}$ \;
+    \Return{$P(o)$} \;
     %do this for each belief in B
 }
-\caption{\footnotesize \texttt{GenRelObs}($\Gamma^h,a,b_i$) $\longrightarrow$ $P(z)$ }
+\caption{\footnotesize \texttt{GenRelObs}($\Gamma^h,a,b_i$) $\longrightarrow$ $P(o)$ }
 \label{alg:genrelobs}
 \vspace{-1mm}
 \end{algorithm}
@@ -740,14 +735,14 @@ For $h=2$ the resulting $\alpha$-vectors after the regression step are functions
 {\footnotesize
 \vspace{-2mm}
 \begin{align}
-\alpha_1^2(t_s,t_o) &= 
+\alpha_{close}^2(t_s,t_o) &= 
 \begin{cases}
  (t_s<15)\wedge (t_s - 10 < t_o<t_s) &: 10 \\
 (t_s>15)\wedge (t_s - 10 < t_o<t_s) &: -100  \\
 \neg(t_s - 10 < t_o<t_s) &: 0
 \end{cases}
 \hspace{2mm} 
-\alpha_2^2(t_s,t_o) &= \begin{cases}
+\alpha_{open}^2(t_s,t_o) &= \begin{cases}
 (t_s - 10 < t_o<t_s) &: -0.1 \\
 \neg(t_s - 10 < t_o<t_s) &: 0
 \end{cases}
@@ -757,21 +752,21 @@ For $h=2$ the resulting $\alpha$-vectors after the regression step are functions
 We now need the $\alpha$-vectors as a function of the observation
 space for a particular belief state, thus next we eliminate the
 current state variable in line 6--8. The resulting $\delta$-functions
-now only depend on the observation: $\delta_{j}(xd_o) := $
+now only depend on the observation: $\delta_{j}^{b_i}(xd_o) := $
 $\int_{x_s'} \bigoplus_{x_d'} b_i * \alpha_j(xd_s,xd_o) \hspace{1mm}dx_s'$.  For $b_2: U[t_s;6,11]$
 %assume the following simple $\delta$-functions:
 the resulting $\delta$-functions are defined below:
 {\footnotesize
 %\vspace{-2mm}
 \begin{align}
-\delta_{1}(t_o) &= 
+\delta_{close}^{b_2}(t_o) &= 
 \begin{cases}
  (14 < t_o< 18) &: 0.025*t_o - 0.45\\
  (8 < t_o< 14) &:  - 0.1\\
  (4 < t_o< 8) &: - 0.025*t_o -0.1\\
 \end{cases}
 \hspace{5mm} 
-\delta_{2}(t_o) &= \begin{cases}
+\delta_{open}^{b_2}(t_o) &= \begin{cases}
  (15 < t_o< 18) &: 25*t_o - 450\\
  (14 < t_o< 15) &: - 2.5*t_o - 37.5\\
  (8 < t_o< 14) &:  -72.5\\
@@ -799,48 +794,46 @@ the resulting $\delta$-functions are defined below:
 %\nonumber
 %\end{align}
 %}
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure*}[tbp!]
 \vspace{-3mm}
 \centering
 \hspace{-20mm}
-\includegraphics[height=40mm]{pics/beliefs.pdf}
-\hspace{-10mm}
-\includegraphics[width=0.33\textwidth]{pics/delta_b1.pdf}
-\hspace{-2mm}
-\includegraphics[width=0.42\textwidth]{pics/delta_b2.pdf}
+\includegraphics[width=0.42\textwidth]{pics/beliefs_2.pdf}
+\hspace{10mm}
+%\includegraphics[width=0.33\textwidth]{pics/delta_b1.pdf}
+%\hspace{-2mm}
+\includegraphics[width=0.42\textwidth]{pics/delta_b2_2.pdf}
 \hspace{-17mm}
 \vspace{-2mm}
 \caption{\footnotesize 
 {\it (left)} Beliefs $b_1,b_2$ for 1D \textsc{\bf Power Plant} example; 
-{\it (center)} Observation dependent function for $b_2$ that partition the observation space into 5 regions with different probabilities for $P(z_1),P(z_2)$ ; 
-{\it (right)} 3 Relevant observation partitions (which is only one partition) and their probabilities for $b_2$.
+%{\it (center)} Observation dependent function for $b_2$ that partition the observation space into 5 regions with different probabilities for $P(o_1),P(o_2)$ ; 
+{\it (right)} Relevant observation partitions and their probabilities for $b_2$. This diagrams shows that for temperatures $t_o < 5.1$ the policy is to open the valve and for higher temperatures, it is unsafe to open it and the policy should follow $\delta_{close}(t_o)$ which is to close the valve. 
 }
 \label{fig:beliefs}
 %\vspace{-4mm}
 \end{figure*}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-The observation dependent $\delta$-functions divide the observation space into regions which can yield the optimal policy according to the belief state $b_1$. According to continuous observation space defined in \cite{pascal_ijcai05}, for a 1-dimensional observation space with two or more functions of the observation, we need to find the optimal boundaries or partitions of the space. In their work, numerical solutions are proposed to find the roots of any two observation dependent function. Instead, here we leverage the symbolic power of the max-operator defined in Section~\ref{sec:case} to find all the boundary regions that define for what partitionings of the observation each 
+The observation dependent $\delta$-functions divide the observation space into regions which can yield the optimal policy according to the belief state $b_2$. According to continuous observation space defined in \cite{pascal_ijcai05}, for a 1-dimensional observation space with two or more functions of the observation, we need to find the optimal boundaries or partitions of the space. In their work, numerical solutions are proposed to find the roots of any two observation dependent function. Instead, here we leverage the symbolic power of the max-operator defined in Section~\ref{sec:case} to find all the boundary regions that define for what partitionings of the observation each 
 $\delta$-function is optimal. For the two $\delta$-functions above the following partitions of the observation space is derived after taking their maximum in lines 9--11: 
 {\footnotesize
 \vspace{-2mm}
 \begin{align}
-\mathrm{max} \Bigg(\delta_{1}(t_o),\delta_{2}(t_o)\Bigg) &= 
+\mathrm{max} \Bigg(\delta_{close}^{b_2}(t_o),\delta_{open}^{b_2}(t_o)\Bigg) &= 
 \begin{cases}
-z_1: (14 < t_o< 18) &: 0.025*t_o - 0.45\\
-z_1: (8 < t_o< 14) &:  -0.1\\
-z_1: (5.1 < t_o< 8) &: - 0.025*t_o -0.1\\
-z_2: (5 < t_o< 5.1) &: - 25*t_o + 127.5\\
-z_2: (4 < t_o< 5) &:  2.5*t_o - 10\\
+o_1: (14 < t_o< 18) &: 0.025*t_o - 0.45\\
+o_1: (8 < t_o< 14) &:  -0.1\\
+o_1: (5.1 < t_o< 8) &: - 0.025*t_o -0.1\\
+o_2: (5 < t_o< 5.1) &: - 25*t_o + 127.5\\
+o_2: (4 < t_o< 5) &:  2.5*t_o - 10\\
 \end{cases}
 \nonumber
 \end{align}
 }
-Note here that each partitioned is labeled according to the original $\delta$-function where $z_1$ is the label of the partition coming from $\delta_{1}(t_o)$. 
+Note here that each partitioned is labeled according to the original $\delta$-function where $o_1$ is the label of the partition coming from $\delta_{close}^{b_2}(t_o)$. 
 These partitions define observation regions which we can now use in a similar fashion to a discrete observation set if only the probability of each of the two distinct observation partitions is found.  This is demonstrated visually
-in Figure~\ref{fig:beliefs} (center) for $b_2$ and for $b_1$
-in Figure~\ref{fig:beliefs} (right). Note here that the maximum of the $\delta$-functions for $b_1$ is equal to $\delta_{2}(t_o)$.
+in Figure~\ref{fig:beliefs} (right) for $b_2$. %Note here that the maximum of the $\delta$-functions for $b_2$ is equal to $\delta_{open}^{b_2}(t_o)$.
 
 Now with the observation partitions derived, all that remains is to
 calculate probabilities for these relevant observations conditioned on
@@ -854,28 +847,27 @@ the belief state.
 Thus we only need to multiply the indicators of each observation partition 
 in this formula to obtain the probability mass lying in each
 partition:
-$$P(z_k|b_i) := \int_{xd_s'}\int_{xd_o}\int_{xd_s} P(xd_o|xd'_s,a)*P(xd'_s|xd_s,a)*b_i* \mathbb{I}[\phi_{z_k}] d_{xd_o} d_{xd_s}d_{xd_s'}$$
-For our example the probabilities can be calculated as below:
+$$P(o_k|b_i) := \int_{x_s'}\int_{x_o}\int_{x_s} \bigoplus_{d_o} \bigoplus_{d_s} \bigoplus_{d_s'} P(xd_o|xd'_s,a)*P(xd'_s|xd_s,a)*b_i* \mathbb{I}[\phi_{o_k}] d_{x_o} d_{x_s}d_{x_s'}$$
+For our example the non-zero probabilities occur in the following partitions as below:
 {\footnotesize
 \vspace{-2mm}
 \begin{align}
-\mathrm{max} \Bigg(\delta_{1}(t_o),\delta_{2}(t_o)\Bigg) &= 
+P(o_k|b_2) &= 
 \begin{cases}
-(\phi_1 : 14 < t_o< 18) &: 0.2\\
-(\phi_2 : 8 < t_o< 14) &:  0.6\\
-(\phi_3 : 5.1 < t_o< 8) &: 0.183\\
-(\phi_4 : 5 < t_o< 5.1) &: 0.002\\
-(\phi_5 : 4 < t_o< 5) &:  0.0125\\
+(\phi_1 : 14 < t_o< 18) & : 0.2\\
+(\phi_2 : 8 < t_o< 14) & :  0.6\\
+(\phi_3 : 5.1 < t_o< 8) & : 0.183\\
+(\phi_4 : 5 < t_o< 5.1) & : 0.0002\\
+(\phi_5 : 4 < t_o< 5) & :  0.0125\\
 \end{cases}
 \nonumber
 \end{align}
 }
-where each constraint is defined as $\phi_i$. For any number of actions and observations the total number of observation partitions depends on the number of belief points. In our example we must have two observation probabilities which is defined as the sum of the probabilities for $z_1,z_2$ according to the constraints: \\
+where each constraint is defined as $\phi_i$. For any number of actions and observations the total number of observation partitions depends on the number of belief points. In our example we must have two observation probabilities which is defined as the sum of the probabilities for $o_1,o_2$ according to the constraints: 
 \begin{align*}
-z_1&: \phi_1 \vee \phi_2 \vee \phi_3 \longrightarrow P(z_1|b_2)=0.983 \\
-z_2&: \phi_4 \vee \phi_5  \longrightarrow P(z_2|b_2)=0.0127
+o_1&: \phi_1 \vee \phi_2 \vee \phi_3 \longrightarrow P(o_1|b_2)=0.983 \\
+o_2&: \phi_4 \vee \phi_5  \longrightarrow P(o_2|b_2)=0.0127
 \end{align*}
-
 %{\footnotesize
 %\begin{align}
 %P(z_k)=
@@ -999,22 +991,22 @@ As the algorithm progresses, the time required to compute the probability of the
 Increase in the problem size, increases the partition numbers on the observation space and this produces more $\alpha$-vectors which also effects the space required to perform the algorithm. The number of vectors stays the same for most horizons and they drop after convergence in the 2D problem instance. %The number of nodes in each iteration increases as more space is required to perform higher iterations.
 This shows that although the 2D instance takes more time and space than the 1D instance, it still converges within reasonable resources.
 
-In Figure ~\ref{fig:3D}  we present plots of the maximum $\alpha$-vectors of belief $b_1$ for different iterations of the 2D problem instance. %Each plot demonstrates the value of each vector as a function of the pressure and temperature. 
-Starting with the first iteration, the value is highest for the reward range ($5<p<15 \wedge 95<t<105$) and -1 or less for other places. In the fifth iteration, the value function has partitioned into more pieces, showing how higher temperatures can increase the value without considering the effect of the pressure. In the last plot, horizon $h=6$ has better tuned the value function so that higher temperatures and pressures increase the value of the maximum $\alpha$-vector and also within the reward range, finer grain partitions have been formed. %Also note that the policy depends on the initial belief and for these plots they were based on $b_1$ which was lower than the reward range. The first action would then mean it has performed an increase while the other iterations decrease and increase respectively.  
+In Figure ~\ref{fig:3D}  we present plots of the maximum $\delta$-vectors of belief $b_1$ for different iterations of the 2D problem instance. %Each plot demonstrates the value of each vector as a function of the pressure and temperature. 
+Starting with the first iteration, the value is highest for the reward range ($5<p<15 \wedge 95<t<105$) and -1 or less for other places. In the fifth iteration, the value function has partitioned into more pieces, showing how higher temperatures can increase the value without considering the effect of the pressure. In the last plot, horizon $h=6$ has better tuned the value function so that higher temperatures and pressures increase the value of the maximum $\delta$-vector and also within the reward range, finer grain partitions have been formed. %Also note that the policy depends on the initial belief and for these plots they were based on $b_1$ which was lower than the reward range. The first action would then mean it has performed an increase while the other iterations decrease and increase respectively.  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % policy2, v2plot.pdf, v9plot
 % annotation?
 \begin{figure*}[tbp!]
 %\vspace{-2mm}
 \centering
-\includegraphics[width=0.31\textwidth]{pics/2d1.pdf}
-\includegraphics[width=0.31\textwidth]{pics/2d9.pdf}
-\includegraphics[width=0.31\textwidth]{pics/2d111.pdf}
+\includegraphics[width=0.31\textwidth]{pics/2d1-4.pdf}
+\includegraphics[width=0.31\textwidth]{pics/2d9-4.pdf}
+\includegraphics[width=0.31\textwidth]{pics/2d111-4.pdf}
 \vspace{-3mm}
 \caption{\footnotesize 
-{\it (left)}Maximum $\alpha$-vector for $b_1$ in first iteration; 
-{\it (center)} $\alpha_{max}^5(b_1)$; 
-{\it (right)} $\alpha_{max}^5(b_1)$.%V^6(p,t)
+{\it (left)}Maximum $\delta$-vector for $b_1$ and action of $close$ in first iteration; 
+{\it (center)} $\delta_{close}^5(b_1)$; 
+{\it (right)} $\delta_{close}^6(b_1)$. Finer grain partitions show that closing (or opening) the valve can occur at more exact temperatures at higher horizons. 
 }
 \label{fig:3D}
 %\vspace{-4mm}
@@ -1042,6 +1034,9 @@ using symbolic integration.  An important avenue for future work is to
 determine whether similar techniques can be applied to the difficult
 case of continuous state, observation, \emph{and} action DC-POMDPs.
 
+\subsubsection*{Acknowledgments}
+
+NICTA is funded by the Australian Government as represented by the Department of Broadband, Communications and the Digital Economy and the Australian Research Council through the ICT Centre of Excellence program. This work was supported by the Fraunhofer ATTRACT fellowship STREAM and by the EC, FP7-248258-First-MM.
 %\subsubsection*{References} 
 \bibliography{dcpomdp}
 \bibliographystyle{plain}
