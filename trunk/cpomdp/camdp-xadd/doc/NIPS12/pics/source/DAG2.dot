@@ -1,0 +1,126 @@
+digraph G {
+  graph [
+    ranksep = "2.00",
+    bb = "0,0,917,612",
+    ratio = auto,
+    fontsize = 16,
+    fontname = Helvetica,
+    size = "7.5,10"
+  ];
+
+  node [
+    fontsize = 16
+  ];
+
+  4083 [
+    shape = box,
+    label = "121 + (3 * x)",
+    fillcolor = lightsalmon,
+    width = "2.1944",
+    style = filled,
+    pos = "670,18"
+  ];
+  4082 [
+    height = "0.51069",
+    label = "(1 * x) >= 50",
+    fillcolor = lightblue,
+    width = "2.736",
+    style = filled,
+    pos = "294,381"
+  ];
+  4078 [
+    height = "0.51069",
+    label = "(1 * x) <= 39",
+    fillcolor = lightblue,
+    width = "3.3125",
+    style = filled,
+    pos = "296,199"
+  ];
+  4088 [
+    shape = box,
+    label = "250",
+    fillcolor = lightsalmon,
+    width = "2.0833",
+    style = filled,
+    pos = "431,18"
+  ];
+  4073 [
+    shape = box,
+    label = "234 + (1.5 * x)",
+    fillcolor = lightsalmon,
+    width = "2.0833",
+    style = filled,
+    pos = "431,18"
+  ];
+  4072 [
+    shape = box,
+    label = "197 + (2 * x)",
+    fillcolor = lightsalmon,
+    width = "2.1944",
+    style = filled,
+    pos = "259,18"
+  ];
+  4094 [
+    height = "0.51069",
+    label = b,
+    fillcolor = lightblue,
+    style = filled,
+    pos = "405,578"
+  ];
+  4091 [
+    height = "0.51069",
+    label = " (1 * x) >= 150",
+    fillcolor = lightblue,
+    width = "2.9217",
+    style = filled,
+    pos = "516,381"
+  ];
+  4087 [
+    height = "0.51069",
+    label = "(1 * x) <= 139",
+    fillcolor = lightblue,
+    width = "3.4744",
+    style = filled,
+    pos = "737,199"
+  ];
+  4078 -> 4073 [
+    style = "",
+    pos = "e,418.15,36.035 309.19,180.51 333.21,148.67 384.15,81.121 411.94,44.271"
+  ];
+  4087 -> 4083 [
+    style = dashed,
+    pos = "e,676.38,36.035 730.45,180.51 718.69,149.07 693.89,82.825 679.99,45.685"
+  ];
+  4091 -> 4087 [
+    style = dashed,
+    pos = "e,715.87,217.21 537.19,362.74 576.96,330.35 662.82,260.42 707.94,223.67"
+  ];
+  4082 -> 4078 [
+    style = dashed,
+    pos = "e,295.81,217.39 294.2,362.41 294.54,331.01 295.28,265.09 295.69,227.6"
+  ];
+  4094 -> 4082 [
+    style = dashed,
+    pos = "e,303.96,399.5 395.73,560.71 376.54,527 332.31,449.31 309,408.36"
+  ];
+  4087 -> 4072 [
+    style = "",
+    pos = "e,832.01,36.035 747.26,180.51 765.86,148.8 805.23,81.69 826.9,44.739"
+  ];
+  4078 -> 4072 [
+    style = dashed,
+    pos = "e,262.52,36.035 292.38,180.51 285.91,149.2 272.31,83.39 264.61,46.163"
+  ];
+  4094 -> 4091 [
+    style = "",
+    pos = "e,506.04,399.5 414.27,560.71 433.46,527 477.69,449.31 501,408.36"
+  ];
+  4091 -> 4088 [
+    style = "",
+    pos = "e,515.1,217.13 515.9,362.41 515.73,330.93 515.36,264.75 515.15,227.31"
+  ];
+  4082 -> 4073 [
+    style = "",
+    pos = "e,99.553,217.21 273.38,362.74 234.7,330.35 151.17,260.42 107.27,223.67"
+  ];
+}
