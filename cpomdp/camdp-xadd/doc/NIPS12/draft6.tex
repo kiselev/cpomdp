@@ -605,8 +605,8 @@ $ = $
 The following SDP operations on case statements require more detail than can be provided here, hence we refer the reader to the relevant literature:
 %\begin{itemize}
 %\item 
-{\it Restriction $f|_{\phi}$:}  Takes a function $f$ to restrict only in cases
-that satisfy some formula $\phi$ as defined in \cite{sanner_uai11}.
+%%{\it Restriction $f|_{\phi}$:}  Takes a function $f$ to restrict only in cases
+%%that satisfy some formula $\phi$ as defined in \cite{sanner_uai11}.
 %\item 
 {\it Substitution $f\sigma$:} Takes a set $\sigma$ of variables and their substitutions (which may be case statements), and carries out all variable substitutions in sequence~\cite{sanner_uai11}.
 %\item 
@@ -741,6 +741,29 @@ state space more and more finely.
 \subsection{PBVI for DC State and DC Observations} 
 \label{sec:cont_obs}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure*}[tbp!]
+\vspace{-3mm}
+\centering
+\hspace{-20mm}
+\includegraphics[width=0.42\textwidth]{pics/beliefs_2.pdf}
+\hspace{10mm}
+%\includegraphics[width=0.33\textwidth]{pics/delta_b1.pdf}
+%\hspace{-2mm}
+\includegraphics[width=0.42\textwidth]{pics/delta_b2_2.pdf}
+\hspace{-17mm}
+\vspace{-2mm}
+\caption{\footnotesize 
+{\it (left)} Beliefs $b_1,b_2$ for \textsc{\bf Cont. 1D-Power Plant}; 
+%{\it (center)} Observation dependent function for $b_2$ that partition the observation space into 5 regions with different probabilities for $p(o_1),p(o_2)$ ; 
+{\it (right)} derived observations partitions for $b_2$.
+%, and optimal conditional policies. This diagrams shows that for temperatures $t_o < 5.1$ the policy is to open the valve and for higher temperatures, it is unsafe to open it and the policy should follow $\delta_{close}(t_o)$ which is to close the valve. 
+}
+\label{fig:beliefs}
+%\vspace{-4mm}
+\end{figure*}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
 In general, it would be impossible to apply standard VI to 
 DC-POMDPs with continuous observations since the number of observations
 is infinite.  However, building on ideas in~\cite{pascal_ijcai05},
@@ -760,7 +783,8 @@ Letting $h=2$, we assume that $\Gamma^{1}$ contains only the
 reward as defined in~\eqref{eq:trans}.
 Then in lines 2--4 of Algorithm~\ref{alg:genrelobs}, we compute the 
 following two $\alpha$-functions for $a \in \{ \open, \close \}$ 
-($j=1$ since $|\Gamma^{1}| = 1$):
+($j=1$ since $|\Gamma^{1}| = 1$):\footnote{For brevity, 0 partitions
+are suppressed in all case forms in this section.}
 {\footnotesize
 \vspace{-1mm}
 \begin{align}
@@ -805,116 +829,75 @@ in lines 5--7. The resulting $\delta$-functions are as follows:
 \vspace{-4mm}
 }
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{figure*}[tbp!]
-\vspace{-3mm}
-\centering
-\hspace{-20mm}
-\includegraphics[width=0.42\textwidth]{pics/beliefs_2.pdf}
-\hspace{10mm}
-%\includegraphics[width=0.33\textwidth]{pics/delta_b1.pdf}
-%\hspace{-2mm}
-\includegraphics[width=0.42\textwidth]{pics/delta_b2_2.pdf}
-\hspace{-17mm}
-\vspace{-2mm}
-\caption{\footnotesize 
-{\it (left)} Beliefs $b_1,b_2$ for \textsc{\bf Cont. 1D-Power Plant}; 
-%{\it (center)} Observation dependent function for $b_2$ that partition the observation space into 5 regions with different probabilities for $p(o_1),p(o_2)$ ; 
-{\it (right)} derived observations partitions for $b_2$.
-%, and optimal conditional policies. This diagrams shows that for temperatures $t_o < 5.1$ the policy is to open the valve and for higher temperatures, it is unsafe to open it and the policy should follow $\delta_{close}(t_o)$ which is to close the valve. 
-}
-\label{fig:beliefs}
-%\vspace{-4mm}
-\end{figure*}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-
-Both $\delta^{\close}_1(t_o)$ and $\delta^{\open}_1(t_o)$ are drawn graphically
-in Figure~\ref{fig:beliefs} (right).  Here we see that the only relevant
-observation is whether $t_o < 5.1$ or not -- this is the only distinction
-that determines whether the policy associated with 
-$\delta^{\close}_1(t_o)$ is higher than $\delta^{\open}_1(t_o)$.
-
-% *** Only relevant observations, need a way to automatically derive...
-
-% *** Later show extract-relevant-partitions
-
-The observation dependent $\delta$-functions divide the observation
-space into regions which can yield the optimal policy according to the
-belief state $b_2$. According to continuous observation space defined
-in \cite{pascal_ijcai05}, for a 1-dimensional observation space with
-two or more functions of the observation, we need to find the optimal
-boundaries or partitions of the space. In their work, numerical
-solutions are proposed to find the roots of any two observation
-dependent function. Instead, here we leverage the symbolic power of
-the max-operator defined in Section~\ref{sec:case} to find all the
-boundary regions that define for what partitionings of the observation
-each $\delta$-function is optimal. For the two $\delta$-functions
-above the following partitions of the observation space is derived
-after taking their maximum in lines 9--11: {\footnotesize
-\vspace{-2mm}
-\begin{align}
-\mathrm{max} \Bigg(\delta_{close}^{b_2}(t_o),\delta_{open}^{b_2}(t_o)\Bigg) &= 
-\begin{cases}
-o_1: (14 < t_o< 18) &: 0.025 t_o - 0.45\\
-o_1: (8 < t_o< 14) &:  -0.1\\
-o_1: (5.1 < t_o< 8) &: - 0.025 t_o -0.1\\
-o_2: (5 < t_o< 5.1) &: - 25 t_o + 127.5\\
-o_2: (4 < t_o< 5) &:  2.5 t_o - 10\\
-\end{cases}
-\nonumber
-\end{align}
-}
-Note here that each partitioned is labeled according to the original $\delta$-function where $o_1$ is the label of the partition coming from $\delta_{close}^{b_2}(t_o)$. 
-These partitions define observation regions which we can now use in a similar fashion to a discrete observation set if only the probability of each of the two distinct observation partitions is found.  This is demonstrated visually
-in Figure~\ref{fig:beliefs} (right) for $b_2$. %Note here that the maximum of the $\delta$-functions for $b_2$ is equal to $\delta_{open}^{b_2}(t_o)$.
-
-Now with the observation partitions derived, all that remains is to
-calculate probabilities for these relevant observations conditioned on
-the belief state. 
-% This does not check out!
-% 
-%As a reality check, we note that if we integrate out the
-%state and observation from the observation model and the belief state
-%regardless of a particular $\alpha$-vector, it integrates to one:
-%$\int_{\xdo}\int_{\xds} p(\xdo|\xds',a)*p(\xds'|\xds,a)*p(s) = 1$.
-Thus we only need to multiply the indicators of each observation partition 
-in this formula to obtain the probability mass lying in each
-partition:
-$$p(o_k|\vec{b}_i) := \int_{x_s'}\int_{x_o}\int_{x_s} \bigoplus_{d_o} \bigoplus_{d_s} \bigoplus_{d_s'} p(\xdo|\xds',a) p(\xds'|\xds,a) \vec{b}_i  \mathbb{I}[\phi_{o_k}] d_{x_o} d_{x_s}d_{x_s'}$$
-For our example the non-zero probabilities occur in the following partitions as below:
+Both $\delta^{\close}_1(t_o)$ and $\delta^{\open}_1(t_o)$ are drawn
+graphically in Figure~\ref{fig:beliefs} (right).  These observation-dependent 
+$\delta$'s divide the observation space into regions
+which can yield the optimal policy according to the belief state
+$b_2$.  Following \cite{pascal_ijcai05}, we need to find the optimal
+boundaries or partitions of the observation space; in their work, numerical
+solutions are proposed to find these boundaries in \emph{one dimension}
+(multiple observations are handled through an independence assumption).
+Instead, here we leverage the symbolic power of
+the $\casemax$ operator defined in Section~\ref{sec:case} to find all the
+partitions where each \emph{potentially correlated, multivariate} observation
+$\delta$ is optimal. For the two $\delta$'s 
+above, the following partitions of the observation space are derived
+by the $\casemax$ operator in line 9:
 {\footnotesize
-\vspace{-2mm}
+\vspace{-1mm}
 \begin{align}
-p(o_k|b_2) &= 
+\casemax \left( \delta^{\close}_1(t_o),\delta^{\open}_1(t_o) \right) &= 
 \begin{cases}
-(\phi_1 : 14 < t_o< 18) & : 0.2\\
-(\phi_2 : 8 < t_o< 14) & :  0.6\\
-(\phi_3 : 5.1 < t_o< 8) & : 0.183\\
-(\phi_4 : 5 < t_o< 5.1) & : 0.0002\\
-(\phi_5 : 4 < t_o< 5) & :  0.0125\\
+o_1: (14 < t_o \leq 18) &: 0.025 t_o - 0.45\\
+o_1: (8 < t_o \leq 14) &:  -0.1\\
+o_1: (5.1 < t_o \leq  8) &: - 0.025 t_o -0.1\\
+o_2: (5 < t_o \leq 5.1) &: - 25 t_o + 127.5\\
+o_2: (4 < t_o \leq  5) &:  2.5 t_o - 10\\
 \end{cases}
 \nonumber
 \end{align}
+\vspace{-4mm}
 }
-where each constraint is defined as $\phi_i$. For any number of actions and observations the total number of observation partitions depends on the number of belief points. In our example we must have two observation probabilities which is defined as the sum of the probabilities for $o_1,o_2$ according to the constraints: 
-\begin{align*}
-o_1&: \phi_1 \vee \phi_2 \vee \phi_3 \longrightarrow p(o_1|b_2)=0.983 \\
-o_2&: \phi_4 \vee \phi_5  \longrightarrow p(o_2|b_2)=0.0127
-\end{align*}
-%{\footnotesize
-%\begin{align}
-%p(z_k)=
-%\begin{cases}
-% (t_o<2) &: 0.2 \\
-%(2<t_o) &: 0.8\\
-%\end{cases} 
-%\nonumber
-%\end{align}
-%}
 
-Hence we can now use the algorithms and methods of a discrete observation setting using the probabilities of the partitioned observation space in PBVI! 
-We note here that our method applies to a restricted class of piecewise functions which is piecewise linear transitions and piecewise constant reward and belief. The main reason is that the integration operation over continuous states and observations only allows constant or linear constraints (upper or lower bounds) over these variables \cite{sanner_aaai12}. Thus although in theory we can apply this approach to any piecewise polynomial function, in practice it is limited by the integration bounds.  %Figure ~\ref{fig:obsPartition} shows the observation partitions obtained in the 1D problem instance for different horizons and their related probabilities. In a lyx file, needed?
-Next we present some results for 2-dimensional continuous observation spaces.
+Here we have labeled with $o_1$ the observations where 
+$\delta^\close_1$ is maximal and with $o_2$ the observations where
+$\delta^\open_1$ is maximal.
+What we really care about though are just the constraints 
+identifying $o_1$ and $o_2$ and this is the
+task of $\mathrm{extract\text{-}partition\text{-}constraints}$ in line 9.
+This would associate with $o_1$ the partition constraint
+$\phi_{o_1} \equiv (5.1 < t_o \leq 8) \lor (8 < t_o \leq 14) \lor (14 < t_o \leq 18)$
+and with $o_2$ the 
+partition constraint $\phi_{o_2} \equiv (4 < t_o \leq 5) \lor (5 < t_o \leq 5.1)$
+--- taking into account the 0 partitions and the 1D nature of this example, 
+we can further simplify
+$\phi_{o_1} \equiv (t_o > 5.1)$ and $\phi_{o_2} \equiv (t_o \leq 5.1)$.
+
+Given these relevant observation partitons, our final task in lines
+10-12 is to compute the probabilities of each observation partition
+$\phi_{o_k}$.  This is simply done by marginalizing over the
+observation function $p(\mathcal{O}^h|\xdsp,a)$ within each region
+defined by $\phi_{o_k}$ (achieved by multiplying by an indicator
+function $\mathbb{I}[\phi_{o_k}]$ over these constraints).  To better understand 
+what is computed here, we can compute
+the probability $p(o_k|\vec{b}_i,a)$ of each observation for a belief,
+calculated as follows:
+{\footnotesize
+\vspace{-1mm}
+\begin{equation}
+p(o_k|\vec{b}_i,a) := \int_{\vec{x}_{s}} \int_{\vec{x}_s'} \bigoplus_{\vec{d}_s} \bigoplus_{\vec{d}_s'} p(o_k|\xdsp,a) \otimes p(\xdsp| \xds,a) \otimes \alpha_j(\xdsp) \otimes \vec{b}_i(\xds)\; d\vec{x}_s' d\vec{x}_s
+\end{equation}
+\vspace{-4mm}
+}
+
+Specifically, for $\vec{b}_2$, 
+we obtain $p(o_1|\vec{b}_2,a=\close) = 0.0127$ and $p(o_2|\vec{b}_2,a=\close) = 0.933$
+as shown in Figure~\ref{fig:beliefs} (right).  Incidentally we note that
+$p(o_k|\vec{b}_i,a)$ can be computed and used in other variants of PBVI
+that directly enumerate and work with reachable beliefs.
+
+In summary, in this section we have shown how we can now use the algorithms and methods of a discrete observation POMDP setting to compute exact 1-step point-based backups.
+Next we present some empirical results for 2-dimensional continuous observation spaces.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %\begin{figure}[tbp!]
@@ -957,36 +940,48 @@ Google Code: \textit{http://code.google.com/p/cpomdp} .}
 \end{figure*}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-{\bf \textsc{\bf 2D-Power Plant}:} We consider the more complex model of the power plant similar to \cite{steam2} where the pressure inside the water tank must be controlled to avoid mixing water into the steam or explosion of the tank. We model the pressure variable $p$ as a partially observable variable from the observation readings of the pressure $po$. The two actions of increase and decrease are defined based on the change in both the temperature and the pressure. For the increase action we define: %the transition functions and the reward function is defined as below: 
+{\bf \textsc{\bf 2D-Power Plant}:} We consider the more complex model
+of the power plant similar to \cite{steam2} where the pressure inside
+the water tank must be controlled to avoid mixing water into the steam
+(leading to explosion of the tank).  We model an observable pressure
+reading $p_o$ as a function of the underlying pressure state $p_s$.
+Again we have two actions for opening and closing a pressure valve.
+The $\close$ action has transition 
 {\footnotesize
 \begin{align}
-p(p_s'|\vec{p_s},inc)&= \delta\left[ p_s' - 
+p(p_s'|p_s,a=\close)&= \delta\left[ p_s' - 
 \begin{cases}
  (p+10> 20) &: 20 \\ 
 \neg (p+10> 20) &: p_s + 10 \\
 \end{cases}
 \right]\nonumber
 \hspace{5mm} 
-p(t_s'|\vec{t_s},inc)= \delta\left[ t_s' - (t_s +10) \right]\nonumber
+p(t_s'|t_s,a=\close)= \delta\left[ t_s' - (t_s +10) \right]\nonumber
 \end{align}
 }
-There is a high reward for staying withing the safe temperature and pressure range since it produces power, else depending on how safe it is to have values higher or lower than the safe range, penalty is defined.
+and yields high reward for staying withing the safe temperature and pressure range:
 {\footnotesize
-\vspace{-3mm}
+\vspace{-1mm}
 \begin{align}
-R(t_s,p_s,inc) &= 
+R(t_s,p_s,a=\close) &= 
 \begin{cases}
 (5 \leq p_s \leq 15)\wedge (95 \leq t_s \leq 105)&:50\\
 (5 \leq p_s \leq 15)\wedge (t_s \leq 95)&: -1\\
-%(5 \leq p_s \leq 15)\wedge (t_s \geq 95)&: -3\\				
-%(p_s \leq 5) &: -3\\						
 (p_s \geq 15) &: -5\\ 
 else &: -3
 \end{cases}\nonumber
 \end{align}
+\vspace{-4mm}
 }
-As for the decrease action, the transition functions reduce the temperature by 5 units and the pressure by 10 units as long as the pressure stays above zero. For the reward function, we assume that there is always a small penalty for decreasing the values because power can not be generated. 
-For the observation model we consider two continuous uniform distributions such as the following:  
+
+Alternately, for the $\open$ action, the transition functions reduce
+the temperature by 5 units and the pressure by 10 units as long as the
+pressure stays above zero. For the $\open$ reward function, we assume
+that there is always a small constant penalty (-1) since no electricity
+is produced.
+
+Observations are distributed uniformly within a region depending on
+their underlying state:
 {\footnotesize
 \begin{align}
 p(t_o|t_s') = 
@@ -1002,48 +997,46 @@ p(p_o|p_s') =
 \end{cases}\nonumber
 \end{align}
 }
-We define two rectangular uniform beliefs around the regions of rewarding, so that one needs to increase the values while the other should decrease them: $b_1: U[t_s;90,100]*U[p_s;0,10]$ and $b_2: U[t_s;90,130]*U[p_s;10,30]$
-%\begin{align}
-%b_1 = 
-%\begin{cases}
-%(p_o>p_s) \wedge (p_o<p_s+10) \wedge (t_o>t_s+ 90) \wedge (t_o<t_s+ 100)&: 0.01 \\
-% \neg( (p_o>p_s) \wedge (p_o<p_s+10) \wedge (t_o>t_s+ 90) \wedge (t_o<t_s+ 100)) &: 0 \\
-%\end{cases}\nonumber
-%\end{align}
-%\begin{align}
-%b_2 = 
-%\begin{cases}
-%(p_o>p_s +10) \wedge (p_o<p_s+30) \wedge (t_o>t_s+ 90) \wedge (t_o<t_s+ 130)&: 0.00125 \\
-% \neg((p_o>p_s +10) \wedge (p_o<p_s+30) \wedge (t_o>t_s+ 90) \wedge (t_o<t_s+ 130)) &: 0 
-%\end{cases}\nonumber
-%\end{align}
-% I can draw this and the 1D belief
-In Figure ~\ref{fig:timeSpace}, a time and space analysis of
-the two versions of \textsc{\bf Power Plant} have been performed for up to 6 horizons. %Comparing the two problem sizes demonstrates the effect of the number of state-observation variables in our algorithm. 
-As the algorithm progresses, the time required to compute the probability of the partitions and finding the maximum $\alpha$-vector with respect to beliefs increases for both problem sizes and significantly more for the 2D version. %The stability in time is due to the fact that each stage almost takes the same time since it has converged quickly.%???
-Increase in the problem size, increases the partition numbers on the observation space and this produces more $\alpha$-vectors which also effects the space required to perform the algorithm. The number of vectors stays the same for most horizons and they drop after convergence in the 2D problem instance. %The number of nodes in each iteration increases as more space is required to perform higher iterations.
-This shows that although the 2D instance takes more time and space than the 1D instance, it still converges within reasonable resources.
+Finally for PBVI, we define two uniform beliefs as follows: 
+$\vec{b}_1: U[t_s;90,100]*U[p_s;0,10]$ and $\vec{b}_2: U[t_s;90,130]*U[p_s;10,30]$
 
-In Figure ~\ref{fig:3D}  we present plots of the maximum $\delta$-vectors of belief $b_1$ for different iterations of the 2D problem instance. %Each plot demonstrates the value of each vector as a function of the pressure and temperature. 
-Starting with the first iteration, the value is highest for the reward range ($5<p<15 \wedge 95<t<105$) and -1 or less for other places. In the fifth iteration, the value function has partitioned into more pieces, showing how higher temperatures can increase the value without considering the effect of the pressure. In the last plot, horizon $h=6$ has better tuned the value function so that higher temperatures and pressures increase the value of the maximum $\delta$-vector and also within the reward range, finer grain partitions have been formed. %Also note that the policy depends on the initial belief and for these plots they were based on $b_1$ which was lower than the reward range. The first action would then mean it has performed an increase while the other iterations decrease and increase respectively.  
+In Figure~\ref{fig:timeSpace}, a time and space analysis of the two
+versions of \textsc{\bf Power Plant} have been performed for up to 6
+horizons.\footnote{These experiments as shown rely on one additional
+  approximation in that they substitute $p(\mathcal{O}^h|\vec{b},a)$
+  in place of $p(\mathcal{O}^h|\xdsp,a)$.  While this yields correct
+  observation probabilities for a point-based backup at a particular
+  belief state $\vec{b}$, the resulting $\alpha$-functions represent
+  an approximation for other belief states.  In general, the PBVI
+  framework in this paper does \emph{not} require this approximation,
+  although when appropriate, using it should increase computational
+  efficiency.}  As the algorithm progresses, the time required to
+compute the probability of the partitions and finding the maximum
+$\alpha$-vector with respect to beliefs increases for both problem
+sizes and significantly more for the 2D version.  As the problem size
+increases, this increases the number of observation partitions and
+this produces more $\alpha$-functions which also affects the space
+required to perform the algorithm.  Later as the control policy
+simplifies in both cases, we see a drop in the number of
+$\alpha$-functions.
+
+%In Figure ~\ref{fig:3D}  we present plots of the maximum $\delta$-vectors of belief $b_1$ for different iterations of the 2D problem instance. 
+%Starting with the first iteration, the value is highest for the reward range ($5<p<15 \wedge 95<t<105$) and -1 or less for other places. In the fifth iteration, the value function has partitioned into more pieces, showing how higher temperatures can increase the value without considering the effect of the pressure. In the last plot, horizon $h=6$ has better tuned the value function so that higher temperatures and pressures increase the value of the maximum $\delta$-vector and also within the reward range, finer grain partitions have been formed. 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% policy2, v2plot.pdf, v9plot
-% annotation?
-\begin{figure*}[tbp!]
-%\vspace{-2mm}
-\centering
-\includegraphics[width=0.31\textwidth]{pics/2d1-4.pdf}
-\includegraphics[width=0.31\textwidth]{pics/2d9-4.pdf}
-\includegraphics[width=0.31\textwidth]{pics/2d111-4.pdf}
-\vspace{-3mm}
-\caption{\footnotesize 
-{\it (left)}Maximum $\delta$-vector for $b_1$ and action of $close$ in first iteration; 
-{\it (center)} $\delta_{close}^5(b_1)$; 
-{\it (right)} $\delta_{close}^6(b_1)$. Finer grain partitions show that closing (or opening) the valve can occur at more exact temperatures at higher horizons. 
-}
-\label{fig:3D}
-%\vspace{-4mm}
-\end{figure*}
+%\begin{figure*}[tbp!]
+%\centering
+%\includegraphics[width=0.31\textwidth]{pics/2d1-4.pdf}
+%\includegraphics[width=0.31\textwidth]{pics/2d9-4.pdf}
+%\includegraphics[width=0.31\textwidth]{pics/2d111-4.pdf}
+%\vspace{-3mm}
+%\caption{\footnotesize 
+%{\it (left)}Maximum $\delta$-vector for $b_1$ and action of $close$ in first iteration; 
+%{\it (center)} $\delta_{close}^5(b_1)$; 
+%{\it (right)} $\delta_{close}^6(b_1)$. Finer grain partitions show that closing (or opening) the valve can occur at more exact temperatures at higher horizons. 
+%}
+%\label{fig:3D}
+%\end{figure*}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 \section{Conclusion} 
