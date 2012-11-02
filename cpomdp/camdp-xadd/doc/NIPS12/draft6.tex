@@ -53,6 +53,7 @@ Bonn, Germany\\
 \newcommand{\new}{\marginpar{NEW}}
 \renewcommand{\l}{\langle}
 \renewcommand{\r}{\rangle}
+\newcommand{\casemax}{\mathrm{casemax}}
 
 \nipsfinalcopy % Uncomment for camera-ready version
 
@@ -388,12 +389,14 @@ space for a given belief state and hence reduce the continuous
 observation problem back to a discrete observation problem at every
 horizon.  
 
-Given discrete observations $o \in \mathcal{O}^h$, the $\Gamma^h$ in
+The $\Gamma^h$ in
 this optimal $h$-stage-to-go value function can be computed via
 Monahan's dynamic programming approach to \emph{value iteration}
-(VI)~\cite{monahan82}.  Initializing $\alpha^0_1 = \vec{0}$ and
-$\Gamma^0 = \{ \alpha^0_1 \}$, $\Gamma^h$ is obtained from
-$\Gamma^{h-1}$ using the backup operation defined in (2):\footnote{The
+(VI)~\cite{monahan82}.  Initializing $\alpha^0_1 = \vec{0}$, 
+$\Gamma^0 = \{ \alpha^0_1 \}$, and assuming discrete 
+observations $o \in \mathcal{O}^h$,
+$\Gamma^h$ is obtained from
+$\Gamma^{h-1}$ as follows:\footnote{The
   $\textrm{\large $\boxplus$}$ of sets is defined as $\textrm{\large
     $\boxplus$}_{j \in \{ 1,\ldots, n \} } S_j = S_1 \textrm{\large
     $\boxplus$} \cdots \textrm{\large $\boxplus$} S_n$ where the
@@ -431,9 +434,11 @@ g^h_{a,o,j}(\xds) &=  \int_{\vec{x}_{s'}} \sum_{\vec{d_{s'}}} p(o|\xds',a)p(\xds
        	\ForEach {$a \in A$}
       	 {
 			$\Gamma_{a}^h :=\emptyset$ \;       		
-       		\If {(continuous observations: $q > 0$)}
-       			{\emph{// Derive relevant observation partitions $O_i^h$ for belief $\vec{b}_i$} \;
-			  $\l O_i^h,p(O_i^h|\vec{b}_i,a) \r \,:=\,$ \genObs{$\Gamma_{PBVI}^{h-1},a,\vec{b}_i$}\;}
+       		\eIf {(continuous observations: $q > 0$)}
+       	         {\emph{// Derive relevant observation partitions $\mathcal{O}_i^h$ for belief $\vec{b}_i$} \;
+			  $\l \mathcal{O}_i^h,p(\mathcal{O}_i^h|\xdsp,a) \r \,:=\,$ \genObs{$\Gamma_{PBVI}^{h-1},a,\vec{b}_i$}\;}
+                 {\emph{// Discrete observations and model already known}\;
+                          $\mathcal{O}_i^h := \{ \vec{d}_o \}$; $p(\mathcal{O}_i^h|\xdsp,a) := $ see Eq~\eqref{eq:obs_model}\;}
        		 \ForEach {$o \in \mathcal{O}_i^{h}$}
        		 {
 				\ForEach {$\alpha_j^{h-1} \in \Gamma_{PBVI}^{h-1}$}
@@ -473,19 +478,23 @@ g^h_{a,o,j}(\xds) &=  \int_{\vec{x}_{s'}} \sum_{\vec{d_{s'}}} p(o|\xds',a)p(\xds
 \decmargin{.5em}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\textbf{Point-based value iteration (PBVI)} computes the value function only for a set of belief states $\{ \vec{b}_i \}$ where $\vec{b}_i := p(\xds)$.  The idea is straightforward and the main modification needed to Monahan's algorithm in Algorithm~\ref{alg:vi} is the loop from lines 19--21 where only $\alpha$-vectors optimal at some belief state are retained for subsequent iterations.  We note that \emph{if} all beliefs reachable in $h$ steps from some initial set can be finitely enumerated and PBVI is executed for this set of beliefs, then optimality is guaranteed for the PBVI policy over these initial beliefs up to horizon $h$.  
-
-%In actuality in the DC-POMDP setting, the generation of continuous observations will most often lead to an infinite number of reachable belief states even in one step, so this optimality guarantee of PBVI will only hold for DC-POMDPs in very special cases when the set of reachable beliefs is finite.  Nonetheless, PBVI has been quite successful in practice without exhaustive enumeration of all reachable beliefs~\cite{pbvi_jair06,hsvi2,Perseus,gapmin}, which motivates our use of PBVI in this work.
-
-We pause for a moment to make a few notes about the \texttt{PBVI}
-algorithm in the context of DC-POMDPs.  If we have no continuous
-observations ($q=0$), the the discrete observation set is
-$\mathcal{O}^h = \{ \vec{d}_o \}, \forall h$ with $p(\vec{d}_o)$ as
-defined by~\eqref{eq:obs_model}.  However, if we have continuous
-observation variables ($q > 0$) then we will need to derive a relevant
-set of observations on line 10, as described in
-Section~\ref{sec:cont_obs}.  
-
+\textbf{Point-based value iteration (PBVI)} computes the value
+function only for a set of belief states $\{ \vec{b}_i \}$ where
+$\vec{b}_i := p(\xds)$.  The idea is straightforward and the main
+modification needed to Monahan's VI approach in Algorithm~\ref{alg:vi}
+(following~\cite{Perseus_cont}) is the loop from lines 22--24 where
+only $\alpha$-vectors optimal at some belief state are retained for
+subsequent iterations.  In the case of continuous observation
+variables ($q > 0$), we will need to derive a relevant set of
+observations on line 10, a key contribution of this work as described
+in Section~\ref{sec:cont_obs}.  Whereas PBVI is optimal if all
+reachable belief states within horizon $H$ are enumerated in $B$, in the DC-POMDP
+setting, the generation of continuous observations will most often
+lead to an infinite number of reachable belief states, even with
+finite horizon.  Nonetheless, PBVI has been quite successful in
+practice without exhaustive enumeration of all reachable
+beliefs~\cite{pbvi_jair06,hsvi2,Perseus,gapmin}, which motivates our
+use of PBVI in this work.
 
 \section{Symbolic Dynamic Programming} 
 
@@ -560,7 +569,7 @@ A \emph{symbolic case maximization} is defined as below:
 \begin{center}
 \begin{tabular}{r c c c l}
 &
-\hspace{-7mm} $\mathrm{max} \Bigg(
+\hspace{-7mm} $\casemax \Bigg(
   \begin{cases}
     \phi_1: \hspace{-2mm} & \hspace{-2mm} f_1 \\ 
     \phi_2: \hspace{-2mm} & \hspace{-2mm} f_2 \\ 
@@ -601,7 +610,7 @@ that satisfy some formula $\phi$ as defined in \cite{sanner_uai11}.
 %\item 
 {\it Substitution $f\sigma$:} Takes a set $\sigma$ of variables and their substitutions (which may be case statements), and carries out all variable substitutions in sequence~\cite{sanner_uai11}.
 %\item 
-{\it Integration $\int_{x_1} f dx_1$:}  There are two forms: If $x_1$ is involved in a $\delta$-function (cf. the transition in Eq~\eqref{eq:trans}) then the integral is equivalent to a symbolic substitution and can be applied to any case statement~\cite{sanner_uai11}. Otherwise, if $f$ is restricted to linear constraints and constant values, then the approach of~\cite{sanner_aaai12} can be applied to yield a linearly constained piecewise linear result.
+{\it Integration $\int_{x_1} f \; dx_1$:}  There are two forms: If $x_1$ is involved in a $\delta$-function (cf. the transition in Eq~\eqref{eq:trans}) then the integral is equivalent to a symbolic substitution and can be applied to any case statement~\cite{sanner_uai11}. Otherwise, if $f$ is restricted to linear constraints and constant values, then the approach of~\cite{sanner_aaai12} can be applied to yield a linearly constained piecewise linear result.
 %\end{itemize}
 
 %\vspace{-2mm}
@@ -702,27 +711,28 @@ state space more and more finely.
 
 \Begin
 {
-		\For {$\alpha_j(\xdsp) \in \Gamma^{h-1}$}    
+		\ForEach {$\alpha_j(\xdsp) \in \Gamma^{h-1}$ and $a \in A$}    
 		{
-		\emph{// Point-based backup (PBB) operation}\\
-    	$\alpha_j(\xds,\xdo) := \int_{\vec{x}_s'} \bigoplus_{\vec{d}_s'} p(\xdo|\xdsp,a) \otimes p(\xdsp| \xds,a) \otimes \alpha_j(\xdsp) \; d\vec{x}_s'$\;
+		\emph{// Perform exact 1-step DP backup of $\alpha$-functions at horizon $h-1$}\\
+    	$\alpha^a_j(\xds,\xdo) := \int_{\vec{x}_s'} \bigoplus_{\vec{d}_s'} p(\xdo|\xdsp,a) \otimes p(\xdsp| \xds,a) \otimes \alpha_j(\xdsp) \; d\vec{x}_s'$\;
 		}  
-		\ForEach {$\alpha_j(\xds,\xdo)$}    
+		\ForEach {$\alpha^a_j(\xds,\xdo)$}    
 		{
-		\emph{// Generate value of $\alpha$-vector for belief $\vec{b}_i(\xds)$ as a function of observations}\\
-		$\delta_{j}(\xdo) := \int_{\vec{x}_{s}} \bigoplus_{\vec{d}_s} \vec{b}_i(\xds) \otimes \alpha_j(\xds,\xdo) \; d\vec{x}_s$\\ \;
+		\emph{// Generate value of each $\alpha$-vector at belief point $\vec{b}_i(\xds)$ as a function of observations}\\
+		$\delta^a_{j}(\xdo) := \int_{\vec{x}_{s}} \bigoplus_{\vec{d}_s} \vec{b}_i(\xds) \otimes \alpha^a_j(\xds,\xdo) \; d\vec{x}_s$\\ \;
 		}
-		\emph{// Generate observation partitions -- see text for details}\\
-		$\mathcal{O}^h := \max(\delta_1(\xdo),\ldots,\delta_{j}(\xdo))$\;
+		\emph{// Using $\casemax$, generate observation partitions relevant to each policy -- see text for details}\\
+		$\mathcal{O}^h := \mathrm{extract\text{-}partition\text{-}constraints}[ \casemax(\delta^{a_1}_1(\xdo),\delta^{a_2}_1(\xdo),\ldots,\delta^{a_r}_{j}(\xdo))]$\;
 
 	\ForEach {$o_k \in \mathcal{O}^h$}{
     	  \emph{// Let $\phi_{o_k}$ be the partition constraints for observation $o_k \in \mathcal{O}^h$}\\
-            $p(\mathcal{O}^h = o_k|\vec{b}_i) := \int_{x_s'} \int_{x_o} \int_{x_s} \bigoplus_{d_o} \bigoplus_{d_s} \bigoplus_{d_s'} p(\xdo|\xds',a) \otimes p(\xds'|\xds,a) \otimes \vec{b}_i \otimes  \mathbb{I}[\phi_{o_k}] d_{x_o} d_{x_s}d_{x_s'}$ \;
+            $p(\mathcal{O}^h = o_k|\xdsp,a) := \int_{\vec{x}_o} \bigoplus_{\vec{d}_o} p(\xdo|\xds',a) \mathbb{I}[\phi_{o_k}] d_{\vec{x}_o}$ \;
+%            $p(\mathcal{O}^h = o_k|\xdsp) := \int_{\vec{x}_s'} \int_{\vec{x}_o} \int_{\vec{x}_s} \bigoplus_{\vec{d}_o} \bigoplus_{\vec{d}_s} \bigoplus_{\vec{d}_s'} p(\xdo|\xds',a) \otimes p(\xds'|\xds,a) \otimes \vec{b}_i \otimes  \mathbb{I}[\phi_{o_k}] d_{x_o} d_{x_s}d_{x_s'}$ \;
         }
-    \Return{$\l \mathcal{O}^h, p(\mathcal{O}^h|\vec{b}_i,a) \r$} \;
+    \Return{$\l \mathcal{O}^h, p(\mathcal{O}^h|\xdsp,a) \r$} \;
     %do this for each belief in B
 }
-\caption{\footnotesize \texttt{GenRelObs}($\Gamma^h,a,\vec{b}_i$) $\longrightarrow$ $\l \mathcal{O}^h, p(\mathcal{O}^h|\vec{b}_i,a) \r$ }
+\caption{\footnotesize \texttt{GenRelObs}($\Gamma^{h-1},a,\vec{b}_i$) $\longrightarrow$ $\l \mathcal{O}^h, p(\mathcal{O}^h|\xdsp,a) \r$ }
 \label{alg:genrelobs}
 \vspace{-1mm}
 \end{algorithm}
@@ -735,106 +745,66 @@ In general, it would be impossible to apply standard VI to
 DC-POMDPs with continuous observations since the number of observations
 is infinite.  However, building on ideas in~\cite{pascal_ijcai05},
 in the case of PBVI, it is possible to \emph{derive} a finite set of
-continuous observation partitions that permit exact point-based backups.
+continuous observation partitions that permit exact point-based backups
+\emph{at a belief point}.
 This additional operation (\texttt{GenRelObs}) appears on line 10 of PBVI in 
 Algorithm~\ref{alg:vi} in the case of continuous observations and is
 formally defined in Algorithm~\ref{alg:genrelobs}.
 
 To demonstrate the generation of relevant continuous observation partitions, 
 we use the second iteration of the \textsc{\bf Cont. Obs. 1D-Power
-  Plant} along with two beliefs points represented as 
+  Plant} along with two belief points represented as 
 uniform distributions: $b_1: U(t_s;2,6)$ and $b_2: U(t_s;6,11)$ as
 shown in Figure~\ref{fig:beliefs} (left).
-
-Starting with an empty set of
-relevant observation partitions $\mathcal{O}^h$, the algorithm first
-eliminates the next state variable $\xds'$. It regresses the
-the set of
-$\alpha$-vectors of the previous horizon back one step via
-the transition and observation model: $\alpha_j(\xds,\xdo) :=
-\int_{x_s'} \bigoplus_{x_d'} p(xd_{o_i}|xd'_{s_i},a)  \otimes  p(xd'_{s_i}| xd_{s_i},a) \otimes  \alpha_j\hspace{1mm}dx_s'
-$.  This operation of line 5 in \texttt{GenRelObs} is similar to 
-the point-based backup in~\eqref{eq:backup}. For
-continuous variables the continuous integral and for discrete
-variables the restriction operation is used as defined in
-Section~\ref{sec:case}.  
-Assuming that after $h=1$ the set of $\alpha$-vectors are
-defined equal to the reward function of equation (1).
-%{\footnotesize
-%\vspace{-3mm}
-%\begin{align}
-%\alpha_1^1(t_s) &= 
-%\begin{cases}
-% (t_s>200) &: -1000 \\
-%\neg(t_s>200) &: 100 \\
-%\end{cases}
-%\hspace{10mm} 
-%\alpha_2^1(t_s) = \top: -1 \nonumber
-%\end{align}
-%}
-For $h=2$ the resulting $\alpha$-vectors after the regression step are functions of the observation and current state: 
+Letting $h=2$, we assume that $\Gamma^{1}$ contains only the 
+reward as defined in~\eqref{eq:trans}.
+Then in lines 2--4 of Algorithm~\ref{alg:genrelobs}, we compute the 
+following two $\alpha$-functions for $a \in \{ \open, \close \}$ 
+($j=1$ since $|\Gamma^{1}| = 1$):
 {\footnotesize
-\vspace{-2mm}
+\vspace{-1mm}
 \begin{align}
-\alpha_{close}^2(t_s,t_o) &= 
+\alpha_1^{\close}(t_s,t_o) &= 
 \begin{cases}
- (t_s<15)\wedge (t_s - 10 < t_o<t_s) &: 10 \\
-(t_s>15)\wedge (t_s - 10 < t_o<t_s) &: -100  \\
-\neg(t_s - 10 < t_o<t_s) &: 0
+ (t_s<15)\wedge (t_s \! - \! 10 < t_o<t_s) &\!\!\!: 10 \\
+(t_s\geq15)\wedge (t_s \! - \! 10 < t_o<t_s) &\!\!\!: -100  \\
+\neg(t_s \! - \! 10 < t_o<t_s) &\!\!\! : 0
 \end{cases}
-\hspace{2mm} 
-\alpha_{open}^2(t_s,t_o) &= \begin{cases}
-(t_s - 10 < t_o<t_s) &: -0.1 \\
-\neg(t_s - 10 < t_o<t_s) &: 0
+\;\;
+\alpha_1^{\open}(t_s,t_o) = \begin{cases}
+(t_s \! - \! 10 < t_o<t_s) &\!\!\!: -0.1 \\
+\neg(t_s \! - \! 10 < t_o<t_s) &\!\!\!: 0
 \end{cases}
 \nonumber
 \end{align}
+\vspace{-4mm}
 } 
+
 We now need the $\alpha$-vectors as a function of the observation
-space for a particular belief state, thus next we eliminate the
-current state variable in line 6--8. The resulting $\delta$-functions
-now only depend on the observation: $\delta_{j}^{\vec{b}_i}(\xdo) := $
-$\int_{x_s'} \bigoplus_{x_d'} \vec{b}_i  \otimes  \alpha_j(\xds,\xdo) \hspace{1mm}dx_s'$.  For $b_2: U[t_s;6,11]$
-%assume the following simple $\delta$-functions:
-the resulting $\delta$-functions are defined below:
+space for a particular belief state, thus next we marginalize out $\xds$
+in lines 5--7. The resulting $\delta$-functions are as follows:
 {\footnotesize
-%\vspace{-2mm}
+\vspace{-1mm}
 \begin{align}
-\delta_{close}^{b_2}(t_o) &= 
+\delta^{\close}_1(t_o) &= 
 \begin{cases}
- (14 < t_o< 18) &: 0.025*t_o - 0.45\\
+ (14 < t_o< 18) &: 0.025 t_o - 0.45\\
  (8 < t_o< 14) &:  - 0.1\\
- (4 < t_o< 8) &: - 0.025*t_o -0.1\\
+ (4 < t_o< 8) &: - 0.025 t_o -0.1\\
 \end{cases}
 \hspace{5mm} 
-\delta_{open}^{b_2}(t_o) &= \begin{cases}
- (15 < t_o< 18) &: 25*t_o - 450\\
- (14 < t_o< 15) &: - 2.5*t_o - 37.5\\
+\delta^{\open}_1(t_o) = \begin{cases}
+ (15 < t_o< 18) &: 25 t_o - 450\\
+ (14 < t_o< 15) &: - 2.5 t_o - 37.5\\
  (8 < t_o< 14) &:  -72.5\\
- (5 < t_o< 8) &: - 25*t_o + 127.5\\
- (4 < t_o< 5) &:  2.5*t_o - 10\\
+ (5 < t_o< 8) &: - 25 t_o + 127.5\\
+ (4 < t_o< 5) &:  2.5 t_o - 10\\
 \end{cases}
 \nonumber
 \end{align}
-%\vspace{-5mm}
+\vspace{-4mm}
 }
-%{\footnotesize
-%\begin{align}
-%\delta_{1}(t_o) &= 
-%\begin{cases}
-% (2<t_o<6) &: 15 - 2.5*t_o \\
-%(-4<t_o<2) &: 10 \\
-%(-8<t_o<-4) &: 20 + 2.5*t_o 
-%\end{cases}
-%\hspace{5mm} 
-%\delta_{2}(t_o) &= \begin{cases}
-% (2<t_o<6) &: -0.15 + 0.025*t_o \\
-%(-4<t_o<2) &: -0.1 \\
-%(-8<t_o<-4) &: -0.2 - 0.025*t_o 
-%\end{cases}
-%\nonumber
-%\end{align}
-%}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure*}[tbp!]
 \vspace{-3mm}
@@ -848,26 +818,48 @@ the resulting $\delta$-functions are defined below:
 \hspace{-17mm}
 \vspace{-2mm}
 \caption{\footnotesize 
-{\it (left)} Beliefs $b_1,b_2$ for 1D \textsc{\bf Power Plant} example; 
+{\it (left)} Beliefs $b_1,b_2$ for \textsc{\bf Cont. 1D-Power Plant}; 
 %{\it (center)} Observation dependent function for $b_2$ that partition the observation space into 5 regions with different probabilities for $p(o_1),p(o_2)$ ; 
-{\it (right)} Relevant observation partitions and their probabilities for $b_2$. This diagrams shows that for temperatures $t_o < 5.1$ the policy is to open the valve and for higher temperatures, it is unsafe to open it and the policy should follow $\delta_{close}(t_o)$ which is to close the valve. 
+{\it (right)} derived observations partitions for $b_2$.
+%, and optimal conditional policies. This diagrams shows that for temperatures $t_o < 5.1$ the policy is to open the valve and for higher temperatures, it is unsafe to open it and the policy should follow $\delta_{close}(t_o)$ which is to close the valve. 
 }
 \label{fig:beliefs}
 %\vspace{-4mm}
 \end{figure*}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-The observation dependent $\delta$-functions divide the observation space into regions which can yield the optimal policy according to the belief state $b_2$. According to continuous observation space defined in \cite{pascal_ijcai05}, for a 1-dimensional observation space with two or more functions of the observation, we need to find the optimal boundaries or partitions of the space. In their work, numerical solutions are proposed to find the roots of any two observation dependent function. Instead, here we leverage the symbolic power of the max-operator defined in Section~\ref{sec:case} to find all the boundary regions that define for what partitionings of the observation each 
-$\delta$-function is optimal. For the two $\delta$-functions above the following partitions of the observation space is derived after taking their maximum in lines 9--11: 
-{\footnotesize
+
+Both $\delta^{\close}_1(t_o)$ and $\delta^{\open}_1(t_o)$ are drawn graphically
+in Figure~\ref{fig:beliefs} (right).  Here we see that the only relevant
+observation is whether $t_o < 5.1$ or not -- this is the only distinction
+that determines whether the policy associated with 
+$\delta^{\close}_1(t_o)$ is higher than $\delta^{\open}_1(t_o)$.
+
+% *** Only relevant observations, need a way to automatically derive...
+
+% *** Later show extract-relevant-partitions
+
+The observation dependent $\delta$-functions divide the observation
+space into regions which can yield the optimal policy according to the
+belief state $b_2$. According to continuous observation space defined
+in \cite{pascal_ijcai05}, for a 1-dimensional observation space with
+two or more functions of the observation, we need to find the optimal
+boundaries or partitions of the space. In their work, numerical
+solutions are proposed to find the roots of any two observation
+dependent function. Instead, here we leverage the symbolic power of
+the max-operator defined in Section~\ref{sec:case} to find all the
+boundary regions that define for what partitionings of the observation
+each $\delta$-function is optimal. For the two $\delta$-functions
+above the following partitions of the observation space is derived
+after taking their maximum in lines 9--11: {\footnotesize
 \vspace{-2mm}
 \begin{align}
 \mathrm{max} \Bigg(\delta_{close}^{b_2}(t_o),\delta_{open}^{b_2}(t_o)\Bigg) &= 
 \begin{cases}
-o_1: (14 < t_o< 18) &: 0.025*t_o - 0.45\\
+o_1: (14 < t_o< 18) &: 0.025 t_o - 0.45\\
 o_1: (8 < t_o< 14) &:  -0.1\\
-o_1: (5.1 < t_o< 8) &: - 0.025*t_o -0.1\\
-o_2: (5 < t_o< 5.1) &: - 25*t_o + 127.5\\
-o_2: (4 < t_o< 5) &:  2.5*t_o - 10\\
+o_1: (5.1 < t_o< 8) &: - 0.025 t_o -0.1\\
+o_2: (5 < t_o< 5.1) &: - 25 t_o + 127.5\\
+o_2: (4 < t_o< 5) &:  2.5 t_o - 10\\
 \end{cases}
 \nonumber
 \end{align}
@@ -888,7 +880,7 @@ the belief state.
 Thus we only need to multiply the indicators of each observation partition 
 in this formula to obtain the probability mass lying in each
 partition:
-$$p(o_k|\vec{b}_i) := \int_{x_s'}\int_{x_o}\int_{x_s} \bigoplus_{d_o} \bigoplus_{d_s} \bigoplus_{d_s'} p(\xdo|\xds',a)*p(\xds'|\xds,a)*\vec{b}_i* \mathbb{I}[\phi_{o_k}] d_{x_o} d_{x_s}d_{x_s'}$$
+$$p(o_k|\vec{b}_i) := \int_{x_s'}\int_{x_o}\int_{x_s} \bigoplus_{d_o} \bigoplus_{d_s} \bigoplus_{d_s'} p(\xdo|\xds',a) p(\xds'|\xds,a) \vec{b}_i  \mathbb{I}[\phi_{o_k}] d_{x_o} d_{x_s}d_{x_s'}$$
 For our example the non-zero probabilities occur in the following partitions as below:
 {\footnotesize
 \vspace{-2mm}
