@@ -1,0 +1,65 @@
+Reviews For Paper
+Paper ID	672
+Title	Symbolic Dynamic Programming for Continuous State and Observation POMDPs
+Masked Reviewer ID:	Assigned_Reviewer_10
+Review:	
+Question	 
+Comments to author(s). First provide a summary of the paper, and then address the following criteria: Quality, clarity, originality and significance. (For detailed reviewing guidelines, see http://nips.cc/PaperInformation/ReviewerInstructions)	 I see you can do symbolic DP for simple cases with discrete action spaces. 
+Can you generalize this to continuous action spaces, LQR, LQG. 
+Sampling based approaches (Atkeson, Todorov iLQG, Tedrake LQR trees) do this in an approximate way. 
+
+I would like to see more complex examples. 
+How far can this approach go? 
+Please summarize your review in 1-2 sentences	 This seems to be a small increment over previous Sanner + others work. 
+Quality score - Does the paper deserves to be published?	 6: Marginally above the acceptance threshold
+Value score - What is the likely impact of this paper?	 2: Material of moderate interest for a specialized subset of the wider research community
+Confidence	 4: Reviewer is confident but not absolutely certain
+Masked Reviewer ID:	Assigned_Reviewer_3
+Review:	
+Question	 
+Comments to author(s). First provide a summary of the paper, and then address the following criteria: Quality, clarity, originality and significance. (For detailed reviewing guidelines, see http://nips.cc/PaperInformation/ReviewerInstructions)	 This paper combines symbolic dynamic programming methods with point based value iteration. The paper oversells itself somewhat, but I think it's an interesting combination nonetheless. How is it oversold? While the paper does address continuous state spaces, it has some pretty strong restrictions on the representation and the representation complexity of the alpha vectors can grow over time, potentially making the algorithm impractical for long horizons. In fact, the algorithm loses one of the nice properties of PBVI - constant representation complexity. Despite this, and the modest experiments, I still do like the paper. 
+
+Typo: line 114: temperate -> temperature 
+
+Missing citations: Should be citing some other work on factored POMDPs, e.g., Hansen and Feng 2000?
+Please summarize your review in 1-2 sentences	 This paper combines PBVI and with factored POMPD methods.
+Quality score - Does the paper deserves to be published?	 8: Top 50% of accepted NIPS papers
+Value score - What is the likely impact of this paper?	 3: Material of interest for a specialized subset of the wider research community
+Confidence	 5: Reviewer is absolutely certain
+Masked Reviewer ID:	Assigned_Reviewer_5
+Review:	
+Question	 
+Comments to author(s). First provide a summary of the paper, and then address the following criteria: Quality, clarity, originality and significance. (For detailed reviewing guidelines, see http://nips.cc/PaperInformation/ReviewerInstructions)	 This article is about solving POMDPs with continuous state and observation spaces. Using a symbolic case-based representation for belief states with extended ADDs, it explains how to do Bellman updates so as to compute an approximately optimal controller. A key aspect is that an integral involved in the Bellman update over can be efficiently computed with this representation and under the assumption that transitions are a finite sum of dirachs. 
+
+Quality: 
+The paper looks technically sound to me. I find the authors somewhat too enthusiastic about their approach ("we make two important contributions"). To be completely fair, they may discuss a bit more the difficulties related to using ADDs (like the complexity for the calculations described in Section 4.1, as well as the growth in memory of the related objects) and the kind of performance guarantees that one could get from their approach. Also, the empirical section is using a toy example and does not show any comparison with other approaches. 
+
+Clarity: 
+The paper is clear and well-written. A small bemol is that contrary to what footnote 3 says, the code was not part of the supplementary material. 
+
+Originality: 
+This is probably the weakest aspect of this paper. It seems to me that this work is essentially an adaptation of previous very similar works: 
+- Z. Zamani, S. Sanner, C. Fang (2012). Symbolic Dynamic Programming for Continuous State and Action MDPs. In Proceedings of the 26th Conference on Artificial Intelligence 
+- S. Sanner, K. V. Delgado, L. N. de Barros (2011). Symbolic Dynamic Programming for Discrete and Continuous State MDPs. In Proceedings of the 27th Conference on Uncertainty in Artificial Intelligence (UAI-11). 
+Moreover, I think the paper does not sufficiently discuss the relation with these works. 
+
+Significance: 
+I don't feel the results are really important. There are no really new ideas and the problem considered is somewhat artificial; in particular the claim of tackling continuous spaces with everything regarding states discretized (point based beliefs and discretized transitions), without any performance analysis, does not seem very convincing to me. 
+
+Also: 
+One of the most authoritative reference on point based value iteration is missing. It is the seminal work by Lovejoy: 
+Lovejoy, W. (1991). "Computationally feasible bounds for partially observed Markov decision processes". Operations Research 39: 162–175.
+Please summarize your review in 1-2 sentences	 I think it is a nice academic exercise, that is properly done, but I don't find the paper very original nor significant. 
+Quality score - Does the paper deserves to be published?	 4: An OK paper, but not good enough
+Value score - What is the likely impact of this paper?	 2: Material of moderate interest for a specialized subset of the wider research community
+Confidence	 3: Reviewer is fairly confident
+
+***
+
+META-REVIEW
+
+Masked Meta-Reviewer ID:	Meta_Reviewer_5
+Meta-Reviews:	
+Question	 
+Summary review -- [this is where you explain the final decision to the authors]	 The paper extends prior work on Symbolic dynamic programming in MDPs to the case of POMDPs. The title is misleading since it implies continuous state *and* actions...which is not quite true. In general, the paper is oversold in its claims. However, the authors have provided a sound rebuttal of some of the main concerns and I recommend acceptance.
+

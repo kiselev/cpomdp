@@ -42,9 +42,12 @@ Bonn, Germany\\
 % puts 3 of 4 authors names on the first line, and the last on the second
 % line, try using \AND instead of \And before the third author name.
 
-\newcommand{\xds}{\mathbf{dx}_s}
-\newcommand{\xdsp}{\mathbf{dx}_s'}
-\newcommand{\xdo}{\mathbf{dx}_o}
+\newcommand{\xds}{\mathbf{x}_s,\!\mathbf{d}_s}
+\newcommand{\xdsp}{\mathbf{x}_s',\!\mathbf{d}_s'}
+%\newcommand{\xds}{\mathbf{dx}_s}
+%\newcommand{\xdsp}{\mathbf{dx}_s'}
+\newcommand{\xdo}{\mathbf{x}_o,\!\mathbf{d}_o}
+%\newcommand{\xdo}{\mathbf{dx}_o}
 \newcommand{\open}{\mathit{open}}
 \newcommand{\close}{\mathit{close}}
 \newcommand{\high}{\mathit{high}}
@@ -142,31 +145,31 @@ observations. % spaces.
 %complexity of SDP is invariant to domain size while enumerated
 %state POMDP solvers have complexity exponential in the domain size.
 
-\section{DC-POMDP Model} 
+\section{Hybrid POMDP Model} 
 
 \label{sec:model}
 
 %% TODO: further restrictions on observations!  also discrete problems!
 %We assume familiarity with MDPs and
 %We introduce discrete and continuous
-%partially observable MDPs (DC-POMDPs) as an extension to 
+%partially observable MDPs (H-POMDPs) as an extension to 
 %DC-MDPs~\cite{sanner_uai11}.  
-A discrete and continuous
-partially observable MDP (DC-POMDP) is a tuple $\langle
+A \emph{hybrid} (discrete and continuous)
+\emph{partially observable MDP} (H-POMDP) is a tuple $\langle
 \mathcal{S},\mathcal{A},\mathcal{O},\mathcal{T},\mathcal{R},\mathcal{Z},\gamma,h
 \rangle$.  States $\mathcal{S}$ are given by vector 
-$\xds = (\vec{d}_s,\vec{x}_s) = (
+$(\vec{d}_s,\vec{x}_s) = (
 d_{s_1},\ldots,d_{s_n},x_{s_1},\ldots,x_{s_m} )$ where each $d_{s_i}
 \in \{ 0,1 \}$ ($1 \leq i \leq n$) is boolean and each
 $x_{s_j} \in \mathbb{R}$ ($1 \leq j \leq m$) is continuous.
 We assume a finite, discrete action space $\mathcal{A} = \{ a_1,
 \ldots, a_r \}$. Observations
-$\mathcal{O}$ are given by the vector $\xdo = (\vec{d}_o,\vec{x}_o) = (
+$\mathcal{O}$ are given by the vector $(\vec{d}_o,\vec{x}_o) = (
 d_{o_1},\ldots,d_{o_p},x_{o_1},\ldots,x_{o_q} )$ where each $d_{o_i}
 \in \{ 0,1 \}$ ($1 \leq i \leq p$) is boolean and each $x_{o_j} \in
 \mathbb{R}$ ($1 \leq j \leq q$) is continuous.
 
-Three functions are required for modeling DC-POMDPs: (1) $\mathcal{T}: \mathcal{S} \times \mathcal{A} \times \mathcal{S} \rightarrow  [ 0, 1 ]$ a Markovian transition model defined as the probability of the next state %$(\vec{d}_s',\vec{x}_s')$ 
+Three functions are required for modeling H-POMDPs: (1) $\mathcal{T}: \mathcal{S} \times \mathcal{A} \times \mathcal{S} \rightarrow  [ 0, 1 ]$ a Markovian transition model defined as the probability of the next state %$(\vec{d}_s',\vec{x}_s')$ 
 given the action and previous state%
 %$(\vec{d}_s,\vec{x}_s)$ 
 %$p(\vec{d}',\vec{x}'|\cdots,a)$
@@ -190,12 +193,12 @@ p(\xdo|\xdsp,a) =
 \prod_{i=1}^p p(d_{o_i}|\xdsp,a) \prod_{j=1}^q p(x_{o_j}|\xdsp,a). \label{eq:obs_model}
 \end{align}}
 %% TRANSITION LINEAR, BELIEF, REWARD, OBSERVATION PWC???
-Probabilities over \emph{discrete} variables $p(d_{s_i}'|\xds,a)$ and
-$p(d_{o_i}|\xdsp,a)$ may condition on both discrete variables and
+Probabilities over \emph{discrete} variables $p(d_{s_i}'\!|\xds,\!a)$ and
+$p(d_{o_i}\!|\xdsp,\!a)$ may condition on both discrete variables and
 (nonlinear) inequalities of continuous variables; this is further
 restricted to linear inequalities in the case of continuous
 observations.  Transitions over \emph{continuous}
-variables $p(x_{s_j}'|\xds, \vec{d}_s',a)$ must be deterministic (but
+variables $p(x_{s_j}'\!|\xds,\!\vec{d}_s',\!a)$ must be deterministic (but
 arbitrary nonlinear) piecewise functions;
 %encoded using the Dirac $\delta$ function; 
 in the case of continuous observations they are further restricted to
@@ -203,8 +206,8 @@ be piecewise linear; this permits discrete noise in the continuous
 transitions since they may condition on stochastically sampled
 discrete next-state variables $\vec{d}_s'$.
 %(hence allowing discrete noise, but not, e.g., Gaussian noise).
-Observation probabilities over continuous variables $p(x_{o_j}|\xdsp,a)$ 
-only occur in the case of continuous observation and are required to be
+Observation probabilities over continuous variables $p(x_{o_j}\!|\xdsp,\!a)$ 
+only occur in the case of continuous observations and are required to be
 piecewise constant (a mixture of uniform distributions); the same
 restriction holds for belief state representations.
 The reward $R(\vec{d},\vec{x},a)$ may be 
@@ -213,11 +216,11 @@ deterministic observations and a piecewise constant function in the
 case of continuous observations.  
 We now provide concrete examples.
 %To make this concrete, we now provide examples of both discrete and
-%continuous observation DC-POMDPs.
+%continuous observation H-POMDPs.
 
 \textbf{Example} \textsc{\bf (Power Plant)~\cite{steam2}} \emph{The steam
 generation system of a power plant evaporates feed-water under restricted 
-pressure and temperature conditions to turn a stream turbine.
+pressure and temperature conditions to turn a steam turbine.
 A reward is obtained when electricity is generated from the turbine 
 and the steam pressure and temperature are within safe ranges.
 Mixing water and steam makes the
@@ -226,7 +229,7 @@ and $t_o \in \mathbb{R}$ on the underlying state $p_s \in \mathbb{R}$
 and $t_s \in \mathbb{R}$ highly uncertain.  Actions $A = \{ \open, \close \}$
 control temperature and pressure by means of a pressure valve.}
 
-We initially present two DC-POMDP variants labeled \textsc{\bf 1D-Power
+We initially present two H-POMDP variants labeled \textsc{\bf 1D-Power
   Plant} using a single temperature state variable $t_s$.  
 The transition and reward are common to both ---
 temperature increments (decrements) with a closed (opened) valve, a
@@ -339,11 +342,11 @@ dashed.}
 %\end{figure}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Value Iteration for DC-POMDPs}
+\section{Value Iteration for Hybrid POMDPs}
 
 \label{sec:vi}
 
-In a DC-POMDP, the agent does not directly observe the states and thus
+In an H-POMDP, the agent does not directly observe the states and thus
 must maintain a belief state $b(\xds) = p(\xds)$.  For a
 given belief state $\vec{b} = b(\xds)$, a POMDP policy $\pi$ can be
 represented by a tree corresponding to a conditional plan $\beta$.  An
@@ -405,7 +408,7 @@ $\Gamma^{h-1}$ as follows:\footnote{The
 {\footnotesize
 \vspace{-1mm}
 \begin{align} 
-g^h_{a,o,j}(\xds) &=  \int_{\vec{x}_{s'}} \sum_{\vec{d_{s'}}} p(o|\xds',a)p(\xds'|\xds,a) \alpha^{h-1}_j(\xds') d\vec{x}_{s'}; \hspace{2mm}  \forall \alpha^{h-1}_{j} \in \Gamma^{h-1} \label{eq:backup} \\
+g^h_{a,o,j}(\xds) &=  \int_{\vec{x}_{s'}} \sum_{\vec{d_{s'}}} p(o|\xdsp,a)p(\xdsp|\xds,a) \alpha^{h-1}_j(\xdsp) d\vec{x}_{s'}; \hspace{2mm}  \forall \alpha^{h-1}_{j} \in \Gamma^{h-1} \label{eq:backup} \\
 \Gamma^{h}_a   &= R(\xds,a) + \gamma \textrm{\large $\boxplus$}_{o \in \mathcal{O}} \left\{ g^h_{a,o,j}(\xds) \right\}_j  \label{eq:cross_prod}\\ 
 \Gamma^h  &= \bigcup_a \Gamma^h_a 
 \end{align}
@@ -461,38 +464,65 @@ g^h_{a,o,j}(\xds) &=  \int_{\vec{x}_{s'}} \sum_{\vec{d_{s'}}} p(o|\xds',a)p(\xds
       }
              % $V^h \,:=\, \mathrm{max}_{\alpha_j \in \Gamma^h} \vec{b}_i \cdot \alpha_j$\;
              % $\pi^{*,h} \,:=\, \argmax_{a} \, \Gamma_a^{h}$\;
+      \emph{// Retain only $\alpha$-functions optimal at each belief point}\;
       \ForEach {$\vec{b}_i \in B$}
       {
-     	$\alpha_{\vec{b}_i}^h :=\ \argmax_{\alpha_j \in \Gamma^h} \alpha_j \cdot \vec{b}_i$\;
+     	$\alpha_{\vec{b}_i}^h :=\ \argmax_{\alpha_j \in \Gamma^h} \alpha_j \cdot \vec{b}_i$ $\,$\;
      	$\Gamma_{PBVI}^h :=\ \Gamma_{PBVI}^h \cup \alpha_{\vec{b}_i}^h$\;
       }
 
+        \emph{// Terminate if early convergence}\;
        \If{$\Gamma_{PBVI}^h = \Gamma_{PBVI}^{h-1}$}
-           {break $\,$ \emph{// Terminate if early convergence}\;}
+           {break $\,$\;}
    }
      \Return{$\Gamma_{PBVI}$} \;
 }
-\caption{\footnotesize \texttt{PBVI}(DC-POMDP, $H$, $B=\left\{\vec{b}_i \right\}$) $\longrightarrow$ $\l V^h \r$ \label{alg:vi}}
+\caption{\footnotesize \texttt{PBVI}(H-POMDP, $H$, $B=\left\{\vec{b}_i \right\}$) $\longrightarrow$ $\l V^h \r$ \label{alg:vi}}
 \vspace{-1mm}
 \end{algorithm}
 \decmargin{.5em}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\textbf{Point-based value iteration (PBVI)} computes the value
+\textbf{Point-based value iteration (PBVI)}~\cite{pbvi_jair06,Perseus} 
+computes the value
 function only for a set of belief states $\{ \vec{b}_i \}$ where
 $\vec{b}_i := p(\xds)$.  The idea is straightforward and the main
 modification needed to Monahan's VI approach in Algorithm~\ref{alg:vi}
-(following~\cite{Perseus_cont}) is the loop from lines 22--24 where
-only $\alpha$-vectors optimal at some belief state are retained for
-subsequent iterations.  In the case of continuous observation
+is the loop from lines 23--25 where
+only $\alpha$-functions optimal at some belief state are retained for
+subsequent iterations.
+In the case of continuous observation
 variables ($q > 0$), we will need to derive a relevant set of
 observations on line 10, a key contribution of this work as described
-in Section~\ref{sec:cont_obs}.  Whereas PBVI is optimal if all
-reachable belief states within horizon $H$ are enumerated in $B$, in the DC-POMDP
-setting, the generation of continuous observations will most often
-lead to an infinite number of reachable belief states, even with
-finite horizon.  Nonetheless, PBVI has been quite successful in
-practice without exhaustive enumeration of all reachable
+in Section~\ref{sec:cont_obs}.  Otherwise if the observations are only 
+discrete ($q=0$), then a finite set of observations is already known and
+the observation function as given in Eq~\eqref{eq:obs_model}.
+
+We remark that Algorithm~\ref{alg:vi} is a generic framework that 
+can be used for both PBVI and other variants of 
+approximate VI.  If used for PBVI, an 
+efficient direct backup computation of the optimal $\alpha$-function for belief 
+state $\vec{b}_i$ should be used in line 17 
+that is linear in the number of observations~\cite{pbvi_jair06,Perseus}
+and which obviates the need for lines 23--25.  
+However, for an alternate version of approximate value iteration that will often
+produce more accurate values for belief states other than those in $B$, 
+one may instead retain the full cross-sum backup
+of line 17, but omit lines 23--25 --- 
+this yields an approximate VI approach 
+(using discretized observations 
+relevant only to a chosen set of belief states $B$ if continuous observations
+are present) that is not restricted to alpha-functions only optimal at $B$, 
+hence allowing greater flexibility
+in approximating the value function over all belief states.%}  
+
+Whereas PBVI is optimal if all reachable belief states within horizon
+$H$ are enumerated in $B$, in the H-POMDP setting, the generation of
+continuous observations will most often lead to an infinite number of
+reachable belief states, even with finite horizon --- this makes
+it quite difficult to provide optimality guarantees in the general case of PBVI
+for continuous observation settings.  Nonetheless, PBVI has been quite
+successful in practice without exhaustive enumeration of all reachable
 beliefs~\cite{pbvi_jair06,hsvi2,Perseus,gapmin}, which motivates our
 use of PBVI in this work.
 
@@ -523,9 +553,9 @@ f =
 \vspace{-4mm}
 }
 
-and this is the form we use to represent all functions in a DC-POMDP.
+and this is the form we use to represent all functions in an H-POMDP.
 The $\phi_i$ are disjoint logical formulae defined over $\xds$ and/or $\xdo$ with logical ($\land,\lor,\neg$) combinations of boolean variables and inequalities ($\geq,>,\leq,<$) over continuous variables.  
-For discrete observation DC-POMDPs, the $f_i$ and inequalities may use any function (e.g., $\sin(x_1) > \log(x_2)\cdot x_3)$; for continuous observations, they are restricted to linear inequalities and linear or piecewise constant $f_i$ as described in Section~\ref{sec:model}.
+For discrete observation H-POMDPs, the $f_i$ and inequalities may use any function (e.g., $\sin(x_1) > \log(x_2)\cdot x_3)$; for continuous observations, they are restricted to linear inequalities and linear or piecewise constant $f_i$ as described in Section~\ref{sec:model}.
 
 For \emph{unary operations} such as scalar multiplication $c\cdot f$ (for some constant $c \in \mathbb{R}$) or negation $-f$ on case statements is simply to apply the operation on each case partition $f_i$ ($1 \leq i \leq k$). 
 A \emph{binary operation} on two case statements, takes the cross-product of the logical partitions of each case statement and performs the corresponding operation on the resulting paired partitions.  The cross-sum $\oplus$ of two cases is defined as the following:
@@ -603,15 +633,15 @@ $ = $
 }
 
 The following SDP operations on case statements require more detail than can be provided here, hence we refer the reader to the relevant literature:
-%\begin{itemize}
+\begin{itemize}
 %\item 
 %%{\it Restriction $f|_{\phi}$:}  Takes a function $f$ to restrict only in cases
 %%that satisfy some formula $\phi$ as defined in \cite{sanner_uai11}.
-%\item 
-{\it Substitution $f\sigma$:} Takes a set $\sigma$ of variables and their substitutions (which may be case statements), and carries out all variable substitutions in sequence~\cite{sanner_uai11}.
-%\item 
-{\it Integration $\int_{x_1} f \; dx_1$:}  There are two forms: If $x_1$ is involved in a $\delta$-function (cf. the transition in Eq~\eqref{eq:trans}) then the integral is equivalent to a symbolic substitution and can be applied to any case statement~\cite{sanner_uai11}. Otherwise, if $f$ is restricted to linear constraints and constant values, then the approach of~\cite{sanner_aaai12} can be applied to yield a linearly constained piecewise linear result.
-%\end{itemize}
+\item 
+{\it Substitution $f\sigma$:} Takes a set $\sigma$ of variables and their substitutions (which may be case statements themselves), and carries out all variable substitutions~\cite{sanner_uai11}.
+\item 
+{\it Integration $\int_{x_1} f \; dx_1$:}  There are two forms: If $x_1$ is involved in a $\delta$-function ({\it cf.} the transition in Eq~\eqref{eq:trans}) then the integral is equivalent to a symbolic substitution and can be applied to \emph{any} case statement ({\it cf.} ~\cite{sanner_uai11}). Otherwise, if $f$ is in linearly constrained polynomial case form, then the approach of~\cite{sanner_aaai12} can be applied to yield a result in the same form.
+\end{itemize}
 
 %\vspace{-2mm}
 %\emph{Restriction} takes a function $f$ to restrict only in cases
@@ -653,10 +683,13 @@ The following SDP operations on case statements require more detail than can be 
 %representation, we obtain the right side of the above. 
 
 %xadd representation
-The data structure of the \emph{extended algebraic decision diagram}
-(XADD)~\cite{sanner_uai11} is used to support case statements and the
-required operations.  Figure~\ref{fig:cond_plan} (right) 
-is an example of an XADD representation.
+Case operations yield a combinatorial explosion in size if
+na\"{i}vely implemented, hence 
+we use the data structure of the \emph{extended algebraic
+  decision diagram} (XADD)~\cite{sanner_uai11} as shown in
+Figure~\ref{fig:cond_plan} (right) to \emph{compactly} 
+represent case statements and \emph{efficiently} support the above
+case operations with them.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %\incmargin{.5em}
@@ -677,25 +710,25 @@ is an example of an XADD representation.
 %\end{algorithm}
 %\decmargin{.5em}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{VI for DC State and Discrete Observations} 
+\subsection{VI for Hybrid State and Discrete Observations} 
 \label{sec:disc_obs}
 
-For DC-POMDPs with only discrete observations $o
-\in \mathcal{O}$ and observation function $p(o|\xds',a)$ (e.g., 
-Eq~\eqref{eq:ex_disc_obs}), we introduce a symbolic version of
+For H-POMDPs with only discrete observations $o
+\in \mathcal{O}$ and observation function $p(o|\xdsp,a)$ 
+as in the form of Eq~\eqref{eq:ex_disc_obs}, we introduce a symbolic version of
 Monahan's VI algorithm.  In brief, we note that all VI operations
 needed in Section~\ref{sec:vi} apply \emph{directly} to 
-DC-POMDPs, e.g., we can rewrite
+H-POMDPs, e.g., rewriting 
 Eq~\eqref{eq:backup}: {\footnotesize
 \vspace{-1mm}
 \begin{equation}
-g^h_{a,o,j}(\xds) \! =  \!\! \int_{\vec{x}_{s'}} \!\! \bigoplus_{\vec{d_{s'}}} \! \left[ p(o|\xds',\!a) \! \otimes \!\! \left( \! \bigotimes_{i=1}^n p(d_{s_i}'|\xds,\!a) \!\! \right) \!\! \otimes \!\! \left( \! \bigotimes_{j=1}^m p(x_{s_j}'|\xds, \vec{d}_s',\!a) \!\! \right) \!\! \otimes \! \alpha^{h-1}_j(\xds') \! \right] \!\! d\vec{x}_{s'} \label{eq:backup_sdp}
+g^h_{a,o,j}(\xds) \! =  \!\! \int_{\vec{x}_{s'}} \!\! \bigoplus_{\vec{d_{s'}}} \! \left[ p(o|\xdsp,\!a) \! \otimes \!\! \left( \! \bigotimes_{i=1}^n p(d_{s_i}'\!|\xds,\!a) \!\! \right) \!\! \otimes \!\! \left( \! \bigotimes_{j=1}^m p(x_{s_j}'\!|\xds, \vec{d}_s',\!a) \!\! \right) \!\! \otimes \! \alpha^{h\!-\!1}_j(\xdsp) \! \right] \!\! d\vec{x}_{s'} \label{eq:backup_sdp}
 \end{equation}
 \vspace{-4mm}
 }
 
-Crucially we note since the continuous transition cpfs $p(x_{s_j}'|\xds, \vec{d}_s',a)$ are deterministic and hence defined with Dirac $\delta$'s (e.g., Eq~\ref{eq:trans}) as described in Section~\ref{sec:model}, the integral $\int_{\vec{x}_{s'}}\!$ can always be computed in closed case form as discussed in Section~\ref{sec:case}.
-In short, nothing additional is required for PBVI on DC-POMDPs
+Crucially we note since the continuous transition cpfs $p(x_{s_j}' \! |\xds, \! \vec{d}_s',\!a)$ are deterministic and hence defined with Dirac $\delta$'s (e.g., Eq~\ref{eq:trans}) as described in Section~\ref{sec:model}, the integral $\int_{\vec{x}_{s'}}\!$ can always be computed in closed case form as discussed in Section~\ref{sec:case}.
+In short, nothing additional is required for PBVI on H-POMDPs
 in this case --- the key insight
 is simply that $\alpha$-functions are now represented by
 case statements and can ``grow'' with the horizon as they partition the
@@ -726,8 +759,8 @@ state space more and more finely.
 
 	\ForEach {$o_k \in \mathcal{O}^h$}{
     	  \emph{// Let $\phi_{o_k}$ be the partition constraints for observation $o_k \in \mathcal{O}^h$}\\
-            $p(\mathcal{O}^h = o_k|\xdsp,a) := \int_{\vec{x}_o} \bigoplus_{\vec{d}_o} p(\xdo|\xds',a) \mathbb{I}[\phi_{o_k}] d_{\vec{x}_o}$ \;
-%            $p(\mathcal{O}^h = o_k|\xdsp) := \int_{\vec{x}_s'} \int_{\vec{x}_o} \int_{\vec{x}_s} \bigoplus_{\vec{d}_o} \bigoplus_{\vec{d}_s} \bigoplus_{\vec{d}_s'} p(\xdo|\xds',a) \otimes p(\xds'|\xds,a) \otimes \vec{b}_i \otimes  \mathbb{I}[\phi_{o_k}] d_{x_o} d_{x_s}d_{x_s'}$ \;
+            $p(\mathcal{O}^h = o_k|\xdsp,a) := \int_{\vec{x}_o} \bigoplus_{\vec{d}_o} p(\xdo|\xdsp,a) \mathbb{I}[\phi_{o_k}] d_{\vec{x}_o}$ \;
+%            $p(\mathcal{O}^h = o_k|\xdsp) := \int_{\vec{x}_s'} \int_{\vec{x}_o} \int_{\vec{x}_s} \bigoplus_{\vec{d}_o} \bigoplus_{\vec{d}_s} \bigoplus_{\vec{d}_s'} p(\xdo|\xdsp,a) \otimes p(\xdsp|\xds,a) \otimes \vec{b}_i \otimes  \mathbb{I}[\phi_{o_k}] d_{x_o} d_{x_s}d_{x_s'}$ \;
         }
     \Return{$\l \mathcal{O}^h, p(\mathcal{O}^h|\xdsp,a) \r$} \;
     %do this for each belief in B
@@ -738,7 +771,7 @@ state space more and more finely.
 \end{algorithm}
 \decmargin{.5em}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{PBVI for DC State and DC Observations} 
+\subsection{PBVI for Hybrid State and Hybrid Observations} 
 \label{sec:cont_obs}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -750,13 +783,13 @@ state space more and more finely.
 \hspace{10mm}
 %\includegraphics[width=0.33\textwidth]{pics/delta_b1.pdf}
 %\hspace{-2mm}
-\includegraphics[width=0.42\textwidth]{pics/delta_b2_2.pdf}
+\includegraphics[width=0.42\textwidth]{pics/delta_b2_3.pdf}
 \hspace{-17mm}
 \vspace{-2mm}
 \caption{\footnotesize 
 {\it (left)} Beliefs $b_1,b_2$ for \textsc{\bf Cont. 1D-Power Plant}; 
 %{\it (center)} Observation dependent function for $b_2$ that partition the observation space into 5 regions with different probabilities for $p(o_1),p(o_2)$ ; 
-{\it (right)} derived observations partitions for $b_2$.
+{\it (right)} derived observation partitions for $b_2$ at $h=2$.
 %, and optimal conditional policies. This diagrams shows that for temperatures $t_o < 5.1$ the policy is to open the valve and for higher temperatures, it is unsafe to open it and the policy should follow $\delta_{close}(t_o)$ which is to close the valve. 
 }
 \label{fig:beliefs}
@@ -765,7 +798,7 @@ state space more and more finely.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 In general, it would be impossible to apply standard VI to 
-DC-POMDPs with continuous observations since the number of observations
+H-POMDPs with continuous observations since the number of observations
 is infinite.  However, building on ideas in~\cite{pascal_ijcai05},
 in the case of PBVI, it is possible to \emph{derive} a finite set of
 continuous observation partitions that permit exact point-based backups
@@ -779,14 +812,12 @@ we use the second iteration of the \textsc{\bf Cont. Obs. 1D-Power
   Plant} along with two belief points represented as 
 uniform distributions: $b_1: U(t_s;2,6)$ and $b_2: U(t_s;6,11)$ as
 shown in Figure~\ref{fig:beliefs} (left).
-Letting $h=2$, we assume that $\Gamma^{1}$ contains only the 
-reward as defined in~\eqref{eq:trans}.
-Then in lines 2--4 of Algorithm~\ref{alg:genrelobs}, we compute the 
-following two $\alpha$-functions for $a \in \{ \open, \close \}$ 
-($j=1$ since $|\Gamma^{1}| = 1$):\footnote{For brevity, 0 partitions
-are suppressed in all case forms in this section.}
+Letting $h=2$, we will assume simply for expository purposes that 
+$|\Gamma^{1}| = 1$ (i.e., it contains only one $\alpha$-function) and
+that in lines 2--4 of Algorithm~\ref{alg:genrelobs} we have computed the 
+following two $\alpha$-functions for $a \in \{ \open, \close \}$:
 {\footnotesize
-\vspace{-1mm}
+\vspace{-2mm}
 \begin{align}
 \alpha_1^{\close}(t_s,t_o) &= 
 \begin{cases}
@@ -796,17 +827,19 @@ are suppressed in all case forms in this section.}
 \end{cases}
 \;\;
 \alpha_1^{\open}(t_s,t_o) = \begin{cases}
-(t_s \! - \! 10 < t_o<t_s) &\!\!\!: -0.1 \\
+(t_s \! - \! 10 < t_o<t_s) &\!\!\!: 0.1 \\
 \neg(t_s \! - \! 10 < t_o<t_s) &\!\!\!: 0
 \end{cases}
 \nonumber
 \end{align}
-\vspace{-4mm}
+\vspace{-3mm}
 } 
 
 We now need the $\alpha$-vectors as a function of the observation
 space for a particular belief state, thus next we marginalize out $\xds$
-in lines 5--7. The resulting $\delta$-functions are as follows:
+in lines 5--7. The resulting $\delta$-functions are shown as follows
+where for brevity from this point forward, 0 partitions
+are suppressed in the cases:
 {\footnotesize
 \vspace{-1mm}
 \begin{align}
@@ -880,8 +913,8 @@ observation function $p(\mathcal{O}^h|\xdsp,a)$ within each region
 defined by $\phi_{o_k}$ (achieved by multiplying by an indicator
 function $\mathbb{I}[\phi_{o_k}]$ over these constraints).  To better understand 
 what is computed here, we can compute
-the probability $p(o_k|\vec{b}_i,a)$ of each observation for a belief,
-calculated as follows:
+the probability $p(o_k|\vec{b}_i,a)$ of each observation for a 
+particular belief, calculated as follows:
 {\footnotesize
 \vspace{-1mm}
 \begin{equation}
@@ -890,14 +923,22 @@ p(o_k|\vec{b}_i,a) := \int_{\vec{x}_{s}} \int_{\vec{x}_s'} \bigoplus_{\vec{d}_s}
 \vspace{-4mm}
 }
 
-Specifically, for $\vec{b}_2$, 
-we obtain $p(o_1|\vec{b}_2,a=\close) = 0.0127$ and $p(o_2|\vec{b}_2,a=\close) = 0.933$
-as shown in Figure~\ref{fig:beliefs} (right).  Incidentally we note that
-$p(o_k|\vec{b}_i,a)$ can be computed and used in other variants of PBVI
-that directly enumerate and work with reachable beliefs.
+Specifically, for $\vec{b}_2$, we obtain $p(o_1|\vec{b}_2,a=\close) =
+0.0127$ and $p(o_2|\vec{b}_2,a=\close) = 0.933$ as shown in
+Figure~\ref{fig:beliefs} (right).
 
-In summary, in this section we have shown how we can now use the algorithms and methods of a discrete observation POMDP setting to compute exact 1-step point-based backups.
-Next we present some empirical results for 2-dimensional continuous observation spaces.
+In summary, in this section we have shown how we can extend the exact
+dynamic programming algorithm for the continuous state, discrete
+observation POMDP setting from Section~\ref{sec:disc_obs} to compute
+exact 1-step point-based backups in the continuous observation setting;
+this was accomplished through the crucial insight that despite the
+infinite number of observations, using Algorithm~\ref{alg:genrelobs}
+we can symbolically 
+derive a set of relevant observations for each belief point that
+distinguish the optimal policy and hence value as graphically
+illustrated in Figure~\ref{fig:beliefs} (right).  Next we present some
+empirical results for 1- and 2-dimensional continuous state and 
+observation spaces.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %\begin{figure}[tbp!]
@@ -920,20 +961,25 @@ We evaluated our continuous POMDP solution using XADDs on the
 \textsc{\bf 1D-Power Plant} example and another variant of this
 problem with two variables, described below.\footnote{ Full problem
 specifications and Java code to reproduce these experiments are available online in
-Google Code: \textit{http://code.google.com/p/cpomdp} .}
+Google Code: \texttt{http://code.google.com/p/cpomdp} .}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure*}[tbp!]
 \vspace{2mm}
 \centering
-\includegraphics[width=0.32\textwidth]{pics/time2.pdf}
-\includegraphics[width=0.32\textwidth]{pics/nodes2.pdf}
-\includegraphics[width=0.32\textwidth]{pics/alpha-vectors2.pdf}
+\includegraphics[width=0.35\textwidth]{pics/time3.pdf} \hspace{15mm}
+\includegraphics[width=0.35\textwidth]{pics/nodes3.pdf}
+%\includegraphics[width=0.32\textwidth]{pics/alpha-vectors2.pdf}
 \vspace{-1mm}
 \caption{\footnotesize 
-{\it (left)} Space vs Horizon; 
-{\it (center)} Time vs Horizon; 
-{\it (right)} Number of $\alpha$-vectors vs Horizon.
+{\it (left)} time vs. horizon, and 
+{\it (right)} space (total \# XADD nodes in $\alpha$-functions) vs. horizon.
+%{\it (right)} number of $\alpha$-functions that would be generated before
+%pruning for each horizon, belief state, and problem if the full 
+%exponential cross-sum backup were used.
+%{\it (right)} Number of $\alpha$-vectors vs Horizon.
+%{\bf TODO:} *** \# of alpha-vectors that would be computed in an
+%approximate value iteration approach.  COVER in text as well.
 }
 \label{fig:timeSpace}
 %\vspace{-4mm}
@@ -959,7 +1005,8 @@ p(p_s'|p_s,a=\close)&= \delta\left[ p_s' -
 p(t_s'|t_s,a=\close)= \delta\left[ t_s' - (t_s +10) \right]\nonumber
 \end{align}
 }
-and yields high reward for staying withing the safe temperature and pressure range:
+and yields high reward for staying within the 
+safe temperature and pressure range:
 {\footnotesize
 \vspace{-1mm}
 \begin{align}
@@ -986,7 +1033,7 @@ their underlying state:
 \begin{align}
 p(t_o|t_s') = 
 \begin{cases}
-(t_s + 80<t_o<t_s+ 105) &: 0.4 \\
+(t_s + 80<t_o<t_s+ 105) &: 0.04 \\
  \neg (t_s + 80<t_o<t_s+ 105) &: 0 \\
 \end{cases}\nonumber
 \hspace{5mm} 
@@ -1001,24 +1048,27 @@ Finally for PBVI, we define two uniform beliefs as follows:
 $\vec{b}_1: U[t_s;90,100]*U[p_s;0,10]$ and $\vec{b}_2: U[t_s;90,130]*U[p_s;10,30]$
 
 In Figure~\ref{fig:timeSpace}, a time and space analysis of the two
-versions of \textsc{\bf Power Plant} have been performed for up to 6
-horizons.\footnote{These experiments as shown rely on one additional
-  approximation in that they substitute $p(\mathcal{O}^h|\vec{b},a)$
-  in place of $p(\mathcal{O}^h|\xdsp,a)$.  While this yields correct
+versions of \textsc{\bf Power Plant} have been performed for up to 
+horizon $h=6$. This experimental evaluation relies on one additional
+  approximation over the PBVI approach of Algorithm~\ref{alg:vi} 
+  in that it substitutes $p(\mathcal{O}^h|\vec{b},a)$
+  in place of $p(\mathcal{O}^h|\xdsp,a)$ --- while this yields correct
   observation probabilities for a point-based backup at a particular
   belief state $\vec{b}$, the resulting $\alpha$-functions represent
   an approximation for other belief states.  In general, the PBVI
   framework in this paper does \emph{not} require this approximation,
   although when appropriate, using it should increase computational
-  efficiency.}  As the algorithm progresses, the time required to
-compute the probability of the partitions and finding the maximum
-$\alpha$-vector with respect to beliefs increases for both problem
-sizes and significantly more for the 2D version.  As the problem size
-increases, this increases the number of observation partitions and
-this produces more $\alpha$-functions which also affects the space
-required to perform the algorithm.  Later as the control policy
-simplifies in both cases, we see a drop in the number of
-$\alpha$-functions.
+  efficiency.  
+
+Figure~\ref{fig:timeSpace} shows that the computation time required
+per iteration generally increases since more complex $\alpha$-functions lead to
+a larger number of observation partitions and thus a more expensive
+backup operation.  While an order of magnitude more time is required
+to double the number of state and observation variables, one can
+see that the PBVI approach leads to a fairly constant amount of computation
+time per horizon, which indicates that long horizons should be computable
+for any problem for which at least one horizon can be computed in an
+acceptable amount of time.
 
 %In Figure ~\ref{fig:3D}  we present plots of the maximum $\delta$-vectors of belief $b_1$ for different iterations of the 2D problem instance. 
 %Starting with the first iteration, the value is highest for the reward range ($5<p<15 \wedge 95<t<105$) and -1 or less for other places. In the fifth iteration, the value function has partitioned into more pieces, showing how higher temperatures can increase the value without considering the effect of the pressure. In the last plot, horizon $h=6$ has better tuned the value function so that higher temperatures and pressures increase the value of the maximum $\delta$-vector and also within the reward range, finer grain partitions have been formed. 
@@ -1049,7 +1099,7 @@ $\alpha$-functions.
 %
 %%\section{Conclusion}
 We presented the first exact symbolic operations for \texttt{PBVI} in
-expressive DC-POMDPs with continuous state \emph{and} observations.
+an expressive subset of H-POMDPs with continuous state \emph{and} observations.
 Unlike related work that has extended to the continuous state and
 observation setting~\cite{Perseus_cont}, we do not approach the
 problem by sampling.  Rather, following~\cite{pascal_ijcai05}, the key
@@ -1057,12 +1107,16 @@ contribution of this work was to define a discrete set of observation
 partitions on the multivariate continuous observation space via
 symbolic maximization techniques and derive the related probabilities
 using symbolic integration.  An important avenue for future work is to
-determine whether similar techniques can be applied to the difficult
-case of continuous state, observation, \emph{and} action DC-POMDPs.
+extend these techniques to the case of
+continuous state, observation, \emph{and} action H-POMDPs.
+
+{\small
 
 \subsubsection*{Acknowledgments}
 
-NICTA is funded by the Australian Government as represented by the Department of Broadband, Communications and the Digital Economy and the Australian Research Council through the ICT Centre of Excellence program. This work was supported by the Fraunhofer ATTRACT fellowship STREAM and by the EC, FP7-248258-First-MM.
+NICTA is funded by the Australian Government as represented by the Department of Broadband, Communications and the Digital Economy and the ARC through the ICT Centre of Excellence program. This work was supported by the Fraunhofer ATTRACT fellowship STREAM and by the EC, FP7-248258-First-MM.
+}
+
 %\subsubsection*{References} 
 \bibliography{dcpomdp}
 \bibliographystyle{plain}
